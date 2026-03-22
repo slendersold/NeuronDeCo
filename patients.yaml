@@ -1,0 +1,19 @@
+root: /beegfs/home/t.samsonov/notebooks/Pirogov/MNE_playground/notebooks
+s10:
+  max_f: 30
+  max_t: -500
+  min_f: 5
+  min_t: 100
+  time_frequency_file: ../tfr_s10.fif
+s11:
+  max_f: 10
+  max_t: -400
+  min_f: 0
+  min_t: 100
+  time_frequency_file: ../tfr_s11.fif
+default:
+  max_f: 30
+  max_t: -400
+  min_f: 5
+  min_t: 100
+  time_frequency_file: ../
