@@ -1,3 +1,8 @@
+from lib.core import (
+    EpochLabelsArray,
+    TFRFeatureArray,
+    TorchTFRClassifier,
+)
 from lib.core.context import RunContext
 from lib.core.pipeline import PipelineRunner
 from lib.models import AlexNetTFR, TFRTransformerWrapper
@@ -15,7 +20,10 @@ from lib.registry import MODE_REGISTRY, MODEL_REGISTRY
 
 __all__ = [
     "AlexNetTFR",
+    "EpochLabelsArray",
+    "TFRFeatureArray",
     "TFRTransformerWrapper",
+    "TorchTFRClassifier",
     "RunContext",
     "PipelineRunner",
     "MODE_REGISTRY",

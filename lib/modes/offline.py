@@ -6,7 +6,12 @@ from lib.core.contracts import ModeRunner, Model, RunResult
 
 
 class OfflineEpochMode(ModeRunner):
-    """Offline batch mode: fit once, evaluate once."""
+    """
+    Offline batch: один вызов ``model.fit(X, y)`` и возврат заглушки метрик.
+
+    ``X``, ``y`` здесь намеренно ``Any``: скелет не навязывает форму TFR;
+    для явных форм см. :mod:`lib.core.tensors`.
+    """
 
     def run(self, model: Model, X: Any, y: Any, *, context: Mapping[str, Any]) -> RunResult:
         model.fit(X, y)

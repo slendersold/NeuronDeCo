@@ -6,6 +6,12 @@ from lib.models.tfr_transformer.preprocess import (
     TFRToSeqFTPlaneConvCollapse,
     TFRToSeqPixelWeightCollapse,
 )
+from lib.models.tfr_transformer.typing import (
+    TransformerBatchIn,
+    TransformerPerStepLogits,
+    TransformerPooledLogits,
+    TransformerSequence,
+)
 from lib.models.tfr_transformer.wrapper import TFRTransformerWrapper
 
 __all__ = [
@@ -15,5 +21,9 @@ __all__ = [
     "TFRToSeqChannelConvCollapse",
     "TFRToSeqFTPlaneConvCollapse",
     "TFRToSeqPixelWeightCollapse",
+    "TransformerBatchIn",
+    "TransformerPerStepLogits",
+    "TransformerPooledLogits",
+    "TransformerSequence",
     "TFRTransformerWrapper",
 ]

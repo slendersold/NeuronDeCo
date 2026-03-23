@@ -1,14 +1,38 @@
+"""
+Фабрика функции сплитов для :func:`lib.optuna.engine.make_objective_engine`.
+
+* ``cv=False``: одно разбиение ``train_test_split`` (стратификация по ``y``).
+* ``cv=True``: ``StratifiedKFold``; число фолдов ``max(2, round(1/test_size))``.
+"""
+
 from __future__ import annotations
 
 from typing import List
 
 import numpy as np
 
+from lib.core.tensors import EpochLabelsArray, TFRFeatureArray
 from lib.optuna.types import Split
 
 
 def make_splits_fn_factory(test_size: float, seed: int, cv: bool):
-    def _make_splits(X: np.ndarray, y: np.ndarray) -> List[Split]:
+    """
+    Parameters
+    ----------
+    test_size:
+        Доля валидации при holdout; при ``cv=True`` используется как ``1/n_splits`` (через ``round``).
+    seed:
+        ``random_state`` для sklearn.
+    cv:
+        Включить K-fold или одно holdout.
+
+    Returns
+    -------
+    callable
+        ``(X, y) -> list[Split]`` с ndarray форм ``(N,C,F,T)`` и ``(N,)``.
+    """
+
+    def _make_splits(X: TFRFeatureArray, y: EpochLabelsArray) -> List[Split]:
         if cv:
             from sklearn.model_selection import StratifiedKFold
 

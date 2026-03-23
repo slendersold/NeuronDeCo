@@ -1,15 +1,14 @@
-"""Shared model typing hooks (optional)."""
+"""
+Общие протоколы для моделей.
+
+Основной контракт для TFR + PyTorch см. :class:`lib.core.contracts.TorchTFRClassifier`.
+"""
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from lib.core.contracts import TorchTFRClassifier
 
-import torch.nn as nn
+# Историческое имя в репозитории — алиас на ядро.
+TFRClassifier = TorchTFRClassifier
 
-
-@runtime_checkable
-class TFRClassifier(Protocol):
-    """Maps batch of TFR tensors [B,C,F,T] to logits [B, num_classes]."""
-
-    def forward(self, x):  # noqa: ANN001
-        ...
+__all__ = ["TFRClassifier", "TorchTFRClassifier"]

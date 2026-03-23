@@ -11,15 +11,27 @@ from lib.optuna.objectives import attrs_fn, objectives_fn
 from lib.optuna.params_alexnet import params_fn_factory as params_fn_factory_alexnet
 from lib.optuna.params_transformer import params_fn_factory as params_fn_factory_transformer
 from lib.optuna.splits import make_splits_fn_factory
-from lib.optuna.types import FoldResult, Params, Split, Values
+from lib.optuna.types import (
+    AlexNetFoldParams,
+    Attrs,
+    FoldResult,
+    FoldTrainingCurves,
+    Params,
+    Split,
+    TransformerFoldParams,
+    Values,
+)
 
 # Backward name: notebooks expect ``params_fn_factory`` for AlexNet-style models.
 params_fn_factory = params_fn_factory_alexnet
 
 __all__ = [
     "aggregate",
+    "AlexNetFoldParams",
+    "Attrs",
     "attrs_fn",
     "FoldResult",
+    "FoldTrainingCurves",
     "loss_slope",
     "make_objective_engine",
     "make_splits_fn_factory",
@@ -30,5 +42,6 @@ __all__ = [
     "params_fn_factory_transformer",
     "run_fold_fn_factory",
     "Split",
+    "TransformerFoldParams",
     "Values",
 ]

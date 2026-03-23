@@ -1,15 +1,27 @@
+"""
+Декораторы для :class:`lib.core.pipeline.PipelineRunner.run`.
+
+Добавляют в ``RunResult.artifacts`` время выполнения и печатают короткий лог.
+"""
+
 from __future__ import annotations
 
 import time
 from typing import Callable, TypeVar
 
-from .contracts import RunResult
+from lib.core.contracts import RunResult
 
 F = TypeVar("F", bound=Callable[..., RunResult])
 
 
 def with_timing(fn: F) -> F:
-    """Attach elapsed seconds to result artifacts."""
+    """
+    После вызова записывает ``elapsed_sec`` в ``result.artifacts``.
+
+    Notes
+    -----
+    Использует ``time.perf_counter()`` (монотонные часы).
+    """
 
     def wrapper(*args, **kwargs):  # type: ignore[override]
         t0 = time.perf_counter()
@@ -21,7 +33,7 @@ def with_timing(fn: F) -> F:
 
 
 def with_logging(fn: F) -> F:
-    """Tiny wrapper-level logging for mode execution."""
+    """Печатает имя функции до/после и итоговые ``metrics``."""
 
     def wrapper(*args, **kwargs):  # type: ignore[override]
         print(f"[framework] start: {fn.__name__}")
@@ -30,4 +42,3 @@ def with_logging(fn: F) -> F:
         return result
 
     return wrapper  # type: ignore[return-value]
-

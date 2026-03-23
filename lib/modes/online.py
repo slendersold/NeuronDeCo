@@ -6,7 +6,12 @@ from lib.core.contracts import ModeRunner, Model, RunResult
 
 
 class OnlineSlidingWindowMode(ModeRunner):
-    """Online-like mode placeholder for sliding window decoding."""
+    """
+    Заглушка «онлайн» режима (скользящее окно).
+
+    Реальная логика декодирования потока не реализована; параметры ``window_size`` /
+    ``step`` сохраняются в ``artifacts`` для будущей интеграции.
+    """
 
     def __init__(self, window_size: int = 128, step: int = 32):
         self.window_size = window_size

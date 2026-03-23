@@ -1,7 +1,8 @@
 """
-End-to-end TFR classifier: [B, C, F, T] → [B, num_classes] logits.
+Сборка: **TFR** → препроцессор → Transformer по времени → **логиты классов** ``(B, K)``.
 
-Pools per-timestep class logits with ``SeqPool`` (mean / softmax / …).
+Соответствует :class:`lib.core.contracts.TorchTFRClassifier` при корректном ``seq_len``
+и режиме ``SeqPool``, дающем ``(B, K)`` (не ``none``).
 """
 
 from __future__ import annotations
@@ -16,6 +17,10 @@ from lib.models.tfr_transformer.preprocess import (
     PREPROCESS_BUILDERS,
     SeqPool,
     TFRToSeqFTPlaneConvCollapse,
+)
+from lib.models.tfr_transformer.typing import (
+    TransformerBatchIn,
+    TransformerPooledLogits,
 )
 
 
@@ -37,6 +42,31 @@ def _build_preprocess(
 
 
 class TFRTransformerWrapper(nn.Module):
+    """
+    Parameters
+    ----------
+    num_classes:
+        ``K`` в выходе ``(B, K)``.
+    dropout:
+        Dropout внутри Transformer и FC-блоков.
+    seq_len:
+        Верхняя граница длины последовательности для PE; должно быть ``>= T`` после препроцессора
+        (обычно ``T`` совпадает с числом временных бинов во входном TFR).
+    pooling:
+        Строка (режим :class:`SeqPool`) или готовый модуль пулинга по времени.
+    preprocess:
+        Ключ из ``PREPROCESS_BUILDERS`` или пользовательский ``nn.Module`` ``(B,C,F,T)→(B,T,D)``.
+    kernel_freq, kernel_time:
+        Для строки ``\"ft_plane_conv\"`` — размеры FT-kernel.
+    embed_dim, nhead, dim_fc, num_layers:
+        Гиперпараметры :class:`TFRSequenceTransformer`.
+
+    Forward
+    -------
+    * **Вход:** ``(B, C, F, T)``.
+    * **Выход:** логиты ``(B, K)``.
+    """
+
     def __init__(
         self,
         num_classes: int = 2,
@@ -51,7 +81,7 @@ class TFRTransformerWrapper(nn.Module):
         nhead: int = 8,
         dim_fc: int = 512,
         num_layers: int = 4,
-    ):
+    ) -> None:
         super().__init__()
         self.preprocess_mod = _build_preprocess(
             preprocess, kernel_freq=kernel_freq, kernel_time=kernel_time
@@ -68,7 +98,7 @@ class TFRTransformerWrapper(nn.Module):
             num_classes=num_classes,
         )
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: TransformerBatchIn) -> TransformerPooledLogits:
         if x.ndim != 4:
             raise ValueError(f"Expected [B,C,F,T], got {tuple(x.shape)}")
         seq = self.preprocess_mod(x)

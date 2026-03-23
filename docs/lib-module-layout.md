@@ -23,7 +23,14 @@
 | `objectives.py` | `objectives_fn`, `attrs_fn` |
 | `engine.py` | `make_objective_engine` |
 
-`lib/optuna_objective_makers.py` оставлен как **`from lib.optuna import *`** для ноутбуков.
+`lib/optuna_objective_makers.py` — по желанию тонкий shim (`from lib.optuna import *`) или ваша монолитная версия; пакет `lib/optuna/` не зависит от этого файла.
+
+## Типизация и формы тензоров
+
+- **`lib/core/tensors.py`** — соглашения по осям `N, C, F, T, K` и алиасы NumPy (`TFRFeatureArray`, `EpochLabelsArray`, …).
+- **`lib/core/contracts.py`** — `TorchTFRClassifier` (вход `(B,C,F,T)`, выход `(B,K)`), `SklearnLikeModel` / `Model` для режимов.
+- **`lib/models/alexnet/typing.py`**, **`lib/models/tfr_transformer/typing.py`** — алиасы `torch.Tensor` с семантикой по методикам.
+- **`lib/optuna/types.py`** — `TypedDict`: `AlexNetFoldParams`, `TransformerFoldParams`, `FoldTrainingCurves`, плюс общий `Params`.
 
 ## Ноутбук transformer
 

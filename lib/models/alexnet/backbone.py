@@ -1,4 +1,11 @@
-"""CNN feature extractor for TFR maps [B, C, F, T]."""
+"""
+Свёрточный backbone AlexNet-стиля для карт TFR.
+
+**Вход одного батча:** ``(B, C, F, T)`` — см. :data:`lib.models.alexnet.typing.AlexNetBatchIn`.
+
+**Выход:** ``(B, 256, F', T')``, где ``F'``, ``T'`` **меньше** исходных из-за stride/pool;
+точные значения зависят от ``F``, ``T`` (для малых размеров возможен нулевой размер — ошибка runtime).
+"""
 
 from __future__ import annotations
 
@@ -6,6 +13,17 @@ import torch.nn as nn
 
 
 def build_alexnet_backbone(in_channels: int) -> nn.Sequential:
+    """
+    Parameters
+    ----------
+    in_channels:
+        Число входных каналов ``C`` (ожидается согласованным с данными).
+
+    Returns
+    -------
+    nn.Sequential
+        Цепочка до линейного классификатора; на выходе 256 каналов пространственной карты.
+    """
     return nn.Sequential(
         nn.Conv2d(in_channels, 64, kernel_size=(5, 11), stride=(1, 4), padding=(2, 0)),
         nn.BatchNorm2d(64),

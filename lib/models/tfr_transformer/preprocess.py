@@ -1,7 +1,17 @@
 """
-TFR [B, C, F, T] → sequence [B, T, feat] for the temporal Transformer.
+Препроцессинг TFR → последовательность по времени и пулинг по времени.
 
-Ported from ``notebooks/transformer_17_03_26.ipynb`` with shape checks kept explicit.
+Общая схема
+-----------
+* **Вход препроцессоров:** ``(B, C, F, T)``.
+* **Выход препроцессоров:** ``(B, T, D)``, где ``D`` зависит от класса (см. докстринги классов).
+* **SeqPool:** ввод ``(B, T, D)`` → вывод обычно ``(B, D)`` (кроме режима ``\"none\"``).
+
+Режимы ``SeqPool``
+------------------
+``mean`` / ``max`` / ``last`` / ``softmax`` сводят время к одному вектору на батч.
+``none`` возвращает полный ряд ``(B, T, D)`` — **не** подходит для текущих
+``train_eval_helpers`` с ``cross_entropy`` по ``(B, K)``.
 """
 
 from __future__ import annotations
@@ -14,6 +24,13 @@ import torch.nn.functional as F
 
 
 class PositionalEncoding(nn.Module):
+    """
+    Синусоидальное PE фиксированной длины ``timesteps``.
+
+    **Вход:** ``(B, T, d_model)`` с ``T <= timesteps``.
+    **Выход:** та же форма, с dropout.
+    """
+
     def __init__(self, d_model: int, timesteps: int, dropout: float):
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
@@ -31,7 +48,12 @@ class PositionalEncoding(nn.Module):
 
 
 class SeqPool(nn.Module):
-    """Pool over time dimension of [B, T, D]."""
+    """
+    Пулинг по оси времени для тензора ``(B, T, D)``.
+
+    * ``mean`` / ``max`` / ``last`` / ``softmax`` → ``(B, D)``.
+    * ``none`` → ``(B, T, D)`` без агрегации.
+    """
 
     def __init__(self, mode: str = "mean"):
         super().__init__()

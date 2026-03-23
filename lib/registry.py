@@ -3,12 +3,14 @@ from __future__ import annotations
 from typing import Dict, Type
 
 from lib.modes.offline import OfflineEpochMode
+from lib.modes.offline_tfr_supervised import OfflineTFRSupervisedMode
 from lib.modes.online import OnlineSlidingWindowMode
 from lib.models.alexnet import AlexNetTFR
 from lib.models.tfr_transformer import TFRTransformerWrapper
 
 MODE_REGISTRY: Dict[str, Type] = {
     "offline_epoch": OfflineEpochMode,
+    "offline_tfr_supervised": OfflineTFRSupervisedMode,
     "online_sliding_window": OnlineSlidingWindowMode,
 }
 

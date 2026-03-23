@@ -5,7 +5,7 @@ from typing import Any, Callable, Iterable, Sequence
 from beartype import beartype
 
 from lib.models.tfr_transformer.preprocess import PREPROCESS_BUILDERS, SeqPool
-from lib.optuna.types import Params
+from lib.optuna.types import TransformerFoldParams
 
 
 @beartype
@@ -19,7 +19,7 @@ def params_fn_factory(
     dim_fc_choices: Sequence[int] = (64, 128, 256, 512),
     preprocess_keys: Sequence[str] = ("flatten", "channel_conv", "ft_plane_conv", "pixel_weight"),
     pooling_modes: Sequence[str] = ("mean", "softmax"),
-) -> Callable[[Any], Params]:
+) -> Callable[[Any], TransformerFoldParams]:
     """
     Search space aligned with ``transformer_17_03_26.ipynb``.
 
@@ -27,7 +27,7 @@ def params_fn_factory(
     Pass ``X.shape[3]`` (or your cropped T) from the loaded tensor.
     """
 
-    def _params_fn(trial) -> Params:
+    def _params_fn(trial) -> TransformerFoldParams:
         embed_dim = trial.suggest_categorical("embed_dim", list(embed_dim_choices))
         possible_heads = [h for h in nhead_choices if embed_dim % h == 0]
         if not possible_heads:
@@ -36,7 +36,7 @@ def params_fn_factory(
         preprocess_mod = PREPROCESS_BUILDERS[preprocess_name]()
 
         batch_size = trial.suggest_categorical("batch_size", list(batch_size_choices))
-        params_dict: Params = {
+        params_dict: TransformerFoldParams = {
             "model": {
                 "num_classes": num_classes,
                 "seq_len": seq_len,

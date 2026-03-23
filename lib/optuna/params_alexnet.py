@@ -4,7 +4,7 @@ from typing import Any, Callable
 
 from beartype import beartype
 
-from lib.optuna.types import Params
+from lib.optuna.types import AlexNetFoldParams
 
 
 @beartype
@@ -12,10 +12,16 @@ def params_fn_factory(
     *,
     in_channels: int,
     num_classes: int,
-) -> Callable[[Any], Params]:
-    """Hyperparameters for :class:`lib.models.alexnet.AlexNetTFR` + AdamW + loaders."""
+) -> Callable[[Any], AlexNetFoldParams]:
+    """
+    Пространство поиска для :class:`lib.models.alexnet.model.AlexNetTFR`.
 
-    def _params_fn(trial) -> Params:
+    * **model:** ``in_channels``, ``num_classes``, ``dropout``.
+    * **optimizer:** ``lr``, ``weight_decay`` (AdamW).
+    * **loaders:** один общий ``batch_size`` для train/val.
+    """
+
+    def _params_fn(trial) -> AlexNetFoldParams:
         batch_size = trial.suggest_categorical("batch_size", [16, 32, 64])
         return {
             "model": {

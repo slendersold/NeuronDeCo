@@ -1,4 +1,10 @@
-"""Adaptive pooling + MLP classifier head."""
+"""
+Голова AlexNet: адаптивное усреднение по пространству ``(F', T')`` + MLP до ``K`` классов.
+
+**Вход:** карта признаков ``(B, 256, F', T')`` с последнего conv backbone.
+
+**Выход классификатора:** ``(B, K)`` логитов — см. :data:`lib.models.alexnet.typing.AlexNetLogits`.
+"""
 
 from __future__ import annotations
 
@@ -13,9 +19,21 @@ def build_alexnet_head(
     dropout: float = 0.5,
 ) -> tuple[nn.Module, nn.Module]:
     """
-    Returns (adapt_pool, classifier).
+    Parameters
+    ----------
+    spatial_pooled_hw:
+        Целевой размер после ``AdaptiveAvgPool2d``; задаёт размерность flatten = ``256 * h * w``.
+    hidden_dim:
+        Размер скрытого слоя MLP.
+    num_classes:
+        ``K`` — число классов (размер последнего линейного слоя).
+    dropout:
+        Dropout после первого линейного слоя и перед выходом.
 
-    Feature maps after backbone are pooled to ``spatial_pooled_hw`` then flattened.
+    Returns
+    -------
+    tuple
+        ``(adapt, classifier)`` — оба ``nn.Module``.
     """
     h, w = spatial_pooled_hw
     adapt = nn.AdaptiveAvgPool2d((h, w))

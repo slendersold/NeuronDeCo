@@ -1,9 +1,13 @@
+"""
+Один train/val фолд: датасеты → ``AdamW`` → цикл эпох с early stopping по ``patience``.
+"""
+
 from __future__ import annotations
 
 from typing import Any, Callable, Type
 
-import numpy as np
 import torch
+import torch.nn as nn
 from beartype import beartype
 from torch.utils.data import DataLoader
 
@@ -13,16 +17,43 @@ from lib.optuna.types import FoldResult, Params, Split
 @beartype
 def run_fold_fn_factory(
     *,
-    ModelCls: Type[Any],
-    device: Any,
+    ModelCls: Type[nn.Module],
+    device: torch.device | str,
     max_epochs: int,
     patience: int,
     TFRDataset: Type[Any],
-    DataLoader: Type[Any],
-    train_one_epoch: Callable[..., Any],
-    eval_one_epoch_f1_macro: Callable[..., Any],
-    loss_metric: Callable[..., float],
+    DataLoader: Type[DataLoader],
+    train_one_epoch: Callable[..., float],
+    eval_one_epoch_f1_macro: Callable[..., tuple[float, float]],
+    loss_metric: Callable[[list[float]], float],
 ) -> Callable[[Split, Params], FoldResult]:
+    """
+    Замыкает гиперпараметры обучения и возвращает ``run_fold(split, params)``.
+
+    Parameters
+    ----------
+    ModelCls:
+        Класс модели (например :class:`lib.models.alexnet.AlexNetTFR`); конструируется как
+        ``ModelCls(**params[\"model\"]).to(device)``.
+    device:
+        Устройство для батчей и модели.
+    max_epochs, patience:
+        Верхняя граница эпох и early stopping, если ``val_f1`` не улучшается.
+    TFRDataset, DataLoader:
+        Обычно :class:`utils.TFRDataset.TFRDataset` и ``torch.utils.data.DataLoader``.
+    train_one_epoch:
+        ``(model, loader, optimizer, device) -> train_loss`` (float).
+    eval_one_epoch_f1_macro:
+        ``(model, loader, device) -> (val_loss, macro_f1)``.
+    loss_metric:
+        Скаляризация списка ``val_losses`` (например :func:`lib.optuna.metrics.loss_slope`).
+
+    Returns
+    -------
+    callable
+        Принимает :class:`Split` и :data:`Params`; возвращает :class:`FoldResult`.
+    """
+
     @beartype
     def _run_fold(sp: Split, params: Params) -> FoldResult:
         p_model = params["model"]
