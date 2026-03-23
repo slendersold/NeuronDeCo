@@ -1,12 +1,15 @@
+"""Shared model typing hooks (optional)."""
+
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Dict, Type
+from typing import Protocol, runtime_checkable
+
+import torch.nn as nn
 
 
-@dataclass
-class ModelSpec:
-    name: str
-    cls: Type[Any]
-    default_kwargs: Dict[str, Any]
+@runtime_checkable
+class TFRClassifier(Protocol):
+    """Maps batch of TFR tensors [B,C,F,T] to logits [B, num_classes]."""
 
+    def forward(self, x):  # noqa: ANN001
+        ...

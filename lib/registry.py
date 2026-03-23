@@ -4,7 +4,8 @@ from typing import Dict, Type
 
 from lib.modes.offline import OfflineEpochMode
 from lib.modes.online import OnlineSlidingWindowMode
-from lib.models.alexnet_model import AlexNetModelAdapter
+from lib.models.alexnet import AlexNetTFR
+from lib.models.tfr_transformer import TFRTransformerWrapper
 
 MODE_REGISTRY: Dict[str, Type] = {
     "offline_epoch": OfflineEpochMode,
@@ -12,6 +13,6 @@ MODE_REGISTRY: Dict[str, Type] = {
 }
 
 MODEL_REGISTRY: Dict[str, Type] = {
-    "alexnet": AlexNetModelAdapter,
+    "alexnet": AlexNetTFR,
+    "tfr_transformer": TFRTransformerWrapper,
 }
-

@@ -32,7 +32,6 @@ class AlexNetTFR(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(512, num_classes),
         )
-
     def forward(self, x):
         x = self.features(x)
         x = self.adapt(x)

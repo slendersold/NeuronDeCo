@@ -1,12 +1,9 @@
 # NeuronDeCo
 
-## Skeleton Layout
+- `lib/` — ядро: `core/`, `modes/`, `models/`, `experiments/`, пакет **`lib/optuna/`** (движок objective), см. **`docs/lib-module-layout.md`**.
+- `examples/` — короткие скрипты.
+- `utils/` — датасеты и хелперы обучения, устаревшая часть.
 
-- `lib/` - framework core, models, modes, experiments.
-- `examples/` - usage examples kept separate from core library.
+### Пример
 
-### Minimal Example
-
-Run:
-
-`python examples/minimal_framework_skeleton.py`
+`python examples/minimal_framework_skeleton.py` (режимы/протокол — скелет; реальное обучение — через Optuna, см. док).

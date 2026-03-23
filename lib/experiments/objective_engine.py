@@ -1,18 +1,5 @@
-from __future__ import annotations
+"""Optuna multi-fold objective: use :func:`lib.optuna.make_objective_engine`."""
 
-from dataclasses import dataclass
-from typing import Any
+from lib.optuna.engine import make_objective_engine
 
-from lib.optuna_objective_makers import make_objective_engine
-
-
-@dataclass
-class OptunaObjectiveEngine:
-    """
-    Thin wrapper around existing make_objective_engine from lib.
-    Keeps current behavior while exposing a stable skeleton entrypoint.
-    """
-
-    def build(self, X: Any, y: Any, **kwargs: Any) -> Any:
-        return make_objective_engine(X=X, y=y, **kwargs)
-
+__all__ = ["make_objective_engine"]

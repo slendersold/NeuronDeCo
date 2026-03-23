@@ -180,7 +180,6 @@ def attrs_fn(trial, params, folds, values):
         "objectives": values,
         "cv_mode": "kfold" if len(folds) > 1 else "holdout",
     }
-
 '''
 Инвариантный “движок” objective
 
