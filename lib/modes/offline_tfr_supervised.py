@@ -2,8 +2,8 @@
 Оффлайн обучение **torch.nn.Module** классификаторов на батчах TFR ``(N,C,F,T)``.
 
 В отличие от :class:`lib.modes.offline.OfflineEpochMode` (скелет с ``fit`` у sklearn-подобной
-модели), здесь используется :class:`utils.TFRDataset.TFRDataset`, ``AdamW`` и те же
-``train_one_epoch`` / ``eval_one_epoch_f1_macro``, что и в Optuna-фолдах.
+модели), здесь используется :class:`lib.data.TFRDataset`, ``AdamW`` и
+:mod:`lib.training.epochs` (те же циклы, что и в Optuna-фолдах).
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 
 from lib.core.contracts import ModeRunner, RunResult
-from utils.TFRDataset import TFRDataset
-from utils.train_eval_helpers import eval_one_epoch_f1_macro, train_one_epoch
+from lib.data import TFRDataset
+from lib.training.epochs import eval_one_epoch_f1_macro, train_one_epoch
 
 
 def _meta_int(context: Mapping[str, Any], key: str, default: int) -> int:

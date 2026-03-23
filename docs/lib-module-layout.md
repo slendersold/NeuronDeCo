@@ -1,4 +1,19 @@
-# Раскладка `lib/` (модели + Optuna)
+# Раскладка NeuronDeCo
+
+## Каталоги
+
+| Путь | Назначение |
+|------|------------|
+| `lib/` | Код проекта: данные, обучение, модели, Optuna, режимы, `core` |
+| `examples/` | Скрипты запуска без Jupyter |
+| `notebooks/` | Эксперименты; `lib_only_tfr_pipeline.ipynb` — только импорты из `lib` |
+| `utils/` | Старые пути импорта; часть модулей реэкспортирует `lib` |
+
+## Данные и циклы обучения (`lib`)
+
+- `lib/data/` — `TFRDataset`
+- `lib/training/` — `train_one_epoch`, `eval_one_epoch_f1_macro`
+- `lib/modes/` — в т.ч. `offline_tfr_supervised` для `nn.Module`
 
 ## Модели
 

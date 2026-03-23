@@ -9,7 +9,6 @@ class TFRDataset(Dataset):
 
     def __len__(self):
         return len(self.X)
-
     def __getitem__(self, idx):
         x = self.X[idx]  # (C,F,T)
         if self.time_crop is not None:

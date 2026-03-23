@@ -40,7 +40,7 @@ def run_fold_fn_factory(
     max_epochs, patience:
         Верхняя граница эпох и early stopping, если ``val_f1`` не улучшается.
     TFRDataset, DataLoader:
-        Обычно :class:`utils.TFRDataset.TFRDataset` и ``torch.utils.data.DataLoader``.
+        Обычно :class:`lib.data.TFRDataset` и ``torch.utils.data.DataLoader``.
     train_one_epoch:
         ``(model, loader, optimizer, device) -> train_loss`` (float).
     eval_one_epoch_f1_macro:

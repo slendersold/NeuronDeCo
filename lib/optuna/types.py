@@ -2,7 +2,7 @@
 Типы для движка Optuna: сплиты, результаты фолда, **структурированные** параметры.
 
 Общий контейнер ``Params`` остаётся ``dict`` для совместимости с произвольными
-``ModelCls`` и :class:`utils.TFRDataset.TFRDataset`. Для двух основных методик
+``ModelCls`` и :class:`lib.data.TFRDataset`. Для двух основных методик
 ниже заданы :class:`typing.TypedDict` — их можно использовать в аннотациях
 фабрик и для статической проверки.
 """
@@ -37,7 +37,7 @@ Values = Union[float, Sequence[float]]
 
 
 class TfrDatasetKwargs(TypedDict, total=False):
-    """Аргументы :class:`utils.TFRDataset.TFRDataset` помимо ``X``, ``y``."""
+    """Аргументы :class:`lib.data.TFRDataset` помимо ``X``, ``y``."""
 
     time_crop: int | None
     """

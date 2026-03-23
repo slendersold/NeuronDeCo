@@ -1,17 +1,12 @@
 # NeuronDeCo
 
-- `lib/` — ядро: `core/`, `modes/`, `models/`, `experiments/`, пакет **`lib/optuna/`** (движок objective), см. **`docs/lib-module-layout.md`**.
-- `examples/` — короткие скрипты.
-- `utils/` — датасеты и хелперы обучения, устаревшая часть.
+Классификация по TFR (PyTorch): модели, Optuna, оффлайн-режимы. Добавьте каталог `NeuronDeCo` в `PYTHONPATH` или запускайте скрипты из этого каталога.
 
-### Примеры
+**Структура и модули:** [docs/lib-module-layout.md](docs/lib-module-layout.md)
 
-- **Оффлайн + синтетика + AlexNet / Transformer:**  
-  `python examples/offline_synthetic_tfr.py`  
-  Режим `offline_tfr_supervised` (реальный цикл AdamW + `train_eval_helpers`).
+**Быстрый старт (из `NeuronDeCo/`):**
 
-- **Optuna + синтетика** (мультиobjective F1 / slope):  
-  `python examples/optuna_synthetic_tfr.py`  
-  Явный `study.optimize`; см. `--help`, `--n-trials`, `--alexnet-only` / `--transformer-only`.
-
-- **Скелет с `fit`:** `python examples/minimal_framework_skeleton.py` (нужен sklearn-подобный `fit`; для `nn.Module` используй пример выше или Optuna).
+```bash
+python examples/offline_synthetic_tfr.py
+python examples/optuna_synthetic_tfr.py --help
+```

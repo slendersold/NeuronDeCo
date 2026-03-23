@@ -1,3 +1,4 @@
+from lib.data import TFRDataset
 from lib.core import (
     EpochLabelsArray,
     TFRFeatureArray,
@@ -17,9 +18,13 @@ from lib.optuna import (
     run_fold_fn_factory,
 )
 from lib.registry import MODE_REGISTRY, MODEL_REGISTRY
+from lib.training.epochs import eval_one_epoch_f1_macro, train_one_epoch
 
 __all__ = [
     "AlexNetTFR",
+    "TFRDataset",
+    "eval_one_epoch_f1_macro",
+    "train_one_epoch",
     "EpochLabelsArray",
     "TFRFeatureArray",
     "TFRTransformerWrapper",
