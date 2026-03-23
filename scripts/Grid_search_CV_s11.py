@@ -3,11 +3,9 @@ from pathlib import Path
 
 # === Настройка путей проекта ===
 project_root = Path("/trinity/home/asma.benachour/notebooks/Pirogov/MNE_playground")
-brainbert_root = Path("/trinity/home/asma.benachour/BrainBERT")
 
 sys.path.append(str(project_root))
-sys.path.append(str(brainbert_root))
-print("Added to PYTHONPATH:", project_root, brainbert_root)
+print("Added to PYTHONPATH:", project_root)
 
 # === Импорты проекта ===
 from utils.analysis_pipeline import (
