@@ -10,7 +10,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, NotRequired, Sequence, TypedDict, Union
+from typing import Any, Dict, List, Sequence, TypedDict, Union
+
+try:
+    from typing import NotRequired
+except ImportError:  # Python < 3.11
+    from typing_extensions import NotRequired
 
 import numpy as np
 import torch.nn as nn
