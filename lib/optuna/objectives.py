@@ -4,10 +4,42 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any, List, Tuple
 
+from lib.models.tfr_transformer.preprocess import (
+    SeqPool,
+    TFRToSeqChannelConvCollapse,
+    TFRToSeqFTPlaneConvCollapse,
+    TFRToSeqFlatten,
+    TFRToSeqPixelWeightCollapse,
+)
 from lib.optuna.metrics import aggregate
 from lib.optuna.types import Attrs, FoldResult, Params, Values
+
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj: Any):
+        if isinstance(obj, SeqPool):
+            return {"type": "SeqPool", "mode": obj.mode}
+        if isinstance(obj, TFRToSeqFlatten):
+            return {"type": "TFRToSeqFlatten"}
+        if isinstance(obj, TFRToSeqChannelConvCollapse):
+            return {"type": "TFRToSeqChannelConvCollapse", "bias": obj.bias_enabled}
+        if isinstance(obj, TFRToSeqFTPlaneConvCollapse):
+            return {
+                "type": "TFRToSeqFTPlaneConvCollapse",
+                "kernel_freq": obj.kernel_freq,
+                "kernel_time": obj.kernel_time,
+                "bias": obj.bias_enabled,
+            }
+        if isinstance(obj, TFRToSeqPixelWeightCollapse):
+            return {"type": "TFRToSeqPixelWeightCollapse"}
+        return super().default(obj)
+
+
+def _json_safe(value: Any) -> Any:
+    return json.loads(json.dumps(value, cls=MyEncoder))
 
 
 def objectives_fn(folds: List[FoldResult], agg_mode: str) -> Tuple[float, float]:
@@ -47,10 +79,10 @@ def attrs_fn(trial: Any, params: Params, folds: List[FoldResult], values: Values
         То, что вернул ``objectives_fn`` (для логирования).
     """
     return {
-        "params": params,
+        "params": _json_safe(params),
         "fold_best_f1s": [f.best_f1 for f in folds],
         "fold_slopes": [f.loss_metric for f in folds],
         "fold_curves": [{"split": f.split, **f.curves} for f in folds],
-        "objectives": values,
+        "objectives": _json_safe(values),
         "cv_mode": "kfold" if len(folds) > 1 else "holdout",
     }

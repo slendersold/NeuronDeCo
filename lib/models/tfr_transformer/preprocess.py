@@ -62,6 +62,9 @@ class SeqPool(nn.Module):
         if self.mode == "softmax":
             self.score = nn.LazyLinear(1)
 
+    def to_json(self) -> dict[str, str]:
+        return {"class": self.__class__.__name__, "mode": self.mode}
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.mode == "mean":
             return x.mean(dim=1)
@@ -77,6 +80,9 @@ class SeqPool(nn.Module):
 
 class TFRToSeqFlatten(nn.Module):
     """[B, C, F, T] -> [B, T, C*F]"""
+
+    def to_json(self) -> dict[str, str]:
+        return {"class": self.__class__.__name__}
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if x.ndim != 4:
@@ -100,6 +106,9 @@ class TFRToSeqChannelConvCollapse(nn.Module):
         self._channels: int | None = None
         self.channel_kernel: nn.Parameter | None = None
         self.channel_bias: nn.Parameter | None = None
+
+    def to_json(self) -> dict[str, object]:
+        return {"class": self.__class__.__name__, "bias": bool(self.bias_enabled)}
 
     def _build(self, channels: int, device: torch.device, dtype: torch.dtype) -> None:
         self._channels = channels
@@ -141,6 +150,14 @@ class TFRToSeqFTPlaneConvCollapse(nn.Module):
         self.ft_kernel: nn.Parameter | None = None
         self.ft_bias: nn.Parameter | None = None
 
+    def to_json(self) -> dict[str, object]:
+        return {
+            "class": self.__class__.__name__,
+            "kernel_freq": int(self.kernel_freq),
+            "kernel_time": int(self.kernel_time),
+            "bias": bool(self.bias_enabled),
+        }
+
     def _build(self, channels: int, device: torch.device, dtype: torch.dtype) -> None:
         self._channels = channels
         self.ft_kernel = nn.Parameter(
@@ -179,6 +196,9 @@ class TFRToSeqPixelWeightCollapse(nn.Module):
         self.weight: nn.Parameter | None = None
         self._built = False
         self._shape: tuple[int, int] | None = None
+
+    def to_json(self) -> dict[str, str]:
+        return {"class": self.__class__.__name__}
 
     def _build(self, f: int, t: int, device: torch.device, dtype: torch.dtype) -> None:
         self.weight = nn.Parameter(torch.randn(f, t, device=device, dtype=dtype))
