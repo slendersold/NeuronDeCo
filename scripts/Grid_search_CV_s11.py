@@ -8,13 +8,7 @@ sys.path.append(str(project_root))
 print("Added to PYTHONPATH:", project_root)
 
 # === Импорты проекта ===
-from utils.analysis_pipeline import (
-    load_and_preprocess,
-    create_epochs,
-    save_epochs,
-    plot_epochs_images,
-)
-from utils.config import ch_to_keep, best_ch_by_power
+
 
 # === Библиотеки ===
 import os

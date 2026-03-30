@@ -1,7 +1,7 @@
 """
 Optuna objective engine split into focused modules.
 
-Import from here or use the compatibility shim ``lib.optuna_objective_makers``.
+Import from this package directly.
 """
 
 from lib.optuna.engine import make_objective_engine
@@ -11,6 +11,7 @@ from lib.optuna.objectives import attrs_fn, objectives_fn
 from lib.optuna.params_alexnet import params_fn_factory as params_fn_factory_alexnet
 from lib.optuna.params_transformer import params_fn_factory as params_fn_factory_transformer
 from lib.optuna.splits import make_splits_fn_factory
+from lib.optuna.constraints import slope_constraint
 from lib.optuna.types import (
     AlexNetFoldParams,
     Attrs,
@@ -20,6 +21,12 @@ from lib.optuna.types import (
     Split,
     TransformerFoldParams,
     Values,
+)
+from lib.optuna.study_analyzers import feasible_trials_less_zero, pareto_front
+from lib.optuna.study_io import load_study_sqlite
+from lib.optuna.trial_visualization import (
+    plot_trial_fold_curves,
+    plot_trials_fold_curves,
 )
 
 # Backward name: notebooks expect ``params_fn_factory`` for AlexNet-style models.
@@ -41,7 +48,13 @@ __all__ = [
     "params_fn_factory_alexnet",
     "params_fn_factory_transformer",
     "run_fold_fn_factory",
+    "slope_constraint",
     "Split",
     "TransformerFoldParams",
     "Values",
+    "feasible_trials_less_zero",
+    "pareto_front",
+    "load_study_sqlite",
+    "plot_trial_fold_curves",
+    "plot_trials_fold_curves",
 ]

@@ -29,6 +29,7 @@ import shutil
 import numpy as np
 import mne
 import optuna
+from torch.utils.data import DataLoader
 
 # === Настройка путей проекта ===
 project_root = Path("/trinity/home/asma.benachour/notebooks/Pirogov/MNE_playground")
@@ -37,10 +38,20 @@ print("Added to PYTHONPATH:", project_root)
 
 # --- твои импорты проекта ---
 # предполагается, что PYTHONPATH уже настроен как в твоих скриптах
-from utils.normalisation import normalize_tfr_robust
-from utils.AlexNet import AlexNetTFR
-from utils.optuna_objective_makers import make_multi_objective
-from utils.optuna_constraints import slope_constraint
+from lib.data.normalisation import normalize_tfr_robust
+from lib.data.tfr_dataset import TFRDataset
+from lib.models.alexnet import AlexNetTFR
+from lib.optuna import (
+    attrs_fn,
+    loss_slope,
+    make_objective_engine,
+    make_splits_fn_factory,
+    objectives_fn,
+    params_fn_factory_alexnet,
+    run_fold_fn_factory,
+    slope_constraint,
+)
+from lib.training.epochs import eval_one_epoch_f1_macro, train_one_epoch
 
 
 # ---------------------------
@@ -343,19 +354,35 @@ def main():
             )
 
             # 3) OBJECTIVE
-            objective = make_multi_objective(
-                X,
-                y,
+            make_splits_fn = make_splits_fn_factory(
                 test_size=args.test_size,
                 seed=args.seed,
-                device=device,
+                cv=args.cv,
+            )
+            run_fold_fn = run_fold_fn_factory(
                 ModelCls=AlexNetTFR,
-                in_channels=channels,
-                num_classes=2,
+                device=device,
                 max_epochs=args.max_epochs,
                 patience=args.patience,
-                cv=args.cv,
-                cv_aggregate=args.cv_aggregate,
+                TFRDataset=TFRDataset,
+                DataLoader=DataLoader,
+                train_one_epoch=train_one_epoch,
+                eval_one_epoch_f1_macro=eval_one_epoch_f1_macro,
+                loss_metric=loss_slope,
+            )
+            params_fn = params_fn_factory_alexnet(
+                in_channels=channels,
+                num_classes=2,
+            )
+            objective = make_objective_engine(
+                X=X,
+                y=y,
+                make_splits_fn=make_splits_fn,
+                run_fold_fn=run_fold_fn,
+                aggregate_mode=args.cv_aggregate,
+                params_fn=params_fn,
+                objectives_fn=objectives_fn,
+                attrs_fn=attrs_fn,
             )
 
             # 4) OPTIMIZE
