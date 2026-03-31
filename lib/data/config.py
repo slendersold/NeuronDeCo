@@ -1,12 +1,16 @@
 """Explicit runtime initialization for external config.py."""
-
 from __future__ import annotations
+
+import sys
 
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+root = Path.cwd().parent.parent
+print(root)
+sys.path.append(str(root))
 
 def _load_config_from_path(path: Path) -> ModuleType:
     spec = spec_from_file_location("neurondeco_external_config", str(path))
@@ -18,7 +22,7 @@ def _load_config_from_path(path: Path) -> ModuleType:
 
 
 _VALUES: dict[str, Any] = {}
-_CONFIG_PATH: Path | None = None
+_CONFIG_PATH: Path | None = Path("../../../PreprocessedData/config.py").resolve()
 
 
 def initialize_config(config_path: str | Path) -> None:
