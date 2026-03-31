@@ -81,6 +81,11 @@ class TFRTransformerWrapper(nn.Module):
         nhead: int = 8,
         dim_fc: int = 512,
         num_layers: int = 4,
+        use_conv: bool = False,
+        conv_kernel_size: int = 3,
+        encoder_dropout: float | None = None,
+        mlp_dropout: float | None = None,
+        conv_dropout: float | None = None,
     ) -> None:
         super().__init__()
         self.preprocess_mod = _build_preprocess(
@@ -96,6 +101,11 @@ class TFRTransformerWrapper(nn.Module):
             num_layers=num_layers,
             dropout=dropout,
             num_classes=num_classes,
+            use_conv=use_conv,
+            conv_kernel_size=conv_kernel_size,
+            encoder_dropout=encoder_dropout,
+            mlp_dropout=mlp_dropout,
+            conv_dropout=conv_dropout,
         )
 
     def forward(self, x: TransformerBatchIn) -> TransformerPooledLogits:

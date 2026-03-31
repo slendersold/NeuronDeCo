@@ -15,7 +15,7 @@ def params_fn_factory(
     seq_len: int,
     batch_size_choices: Sequence[int] = (16, 32, 64),
     embed_dim_choices: Sequence[int] = (32, 64, 128, 256),
-    nhead_choices: Iterable[int] = (1, 2, 4, 8),
+    nhead_choices: Iterable[int] = (2, 4, 8, 16),
     dim_fc_choices: Sequence[int] = (64, 128, 256, 512),
     preprocess_keys: Sequence[str] = ("flatten", "channel_conv", "ft_plane_conv", "pixel_weight"),
     pooling_modes: Sequence[str] = ("mean", "softmax"),
@@ -36,6 +36,7 @@ def params_fn_factory(
         preprocess_mod = PREPROCESS_BUILDERS[preprocess_name]()
 
         batch_size = trial.suggest_categorical("batch_size", list(batch_size_choices))
+        base_dropout = trial.suggest_float("dropout", 0.1, 0.6)
         params_dict: TransformerFoldParams = {
             "model": {
                 "num_classes": num_classes,
@@ -43,8 +44,13 @@ def params_fn_factory(
                 "embed_dim": embed_dim,
                 "nhead": trial.suggest_categorical("nhead", possible_heads),
                 "dim_fc": trial.suggest_categorical("dim_fc", list(dim_fc_choices)),
-                "num_layers": trial.suggest_int("num_layers", 1, 4),
-                "dropout": trial.suggest_float("dropout", 0.1, 0.5),
+                "num_layers": trial.suggest_int("num_layers", 1, 8),
+                "dropout": base_dropout,
+                "encoder_dropout": trial.suggest_float("encoder_dropout", 0.05, 0.6),
+                "mlp_dropout": trial.suggest_float("mlp_dropout", 0.05, 0.6),
+                "use_conv": trial.suggest_categorical("use_conv", [False, True]),
+                "conv_kernel_size": trial.suggest_categorical("conv_kernel_size", [3, 5, 7]),
+                "conv_dropout": trial.suggest_float("conv_dropout", 0.0, 0.6),
                 "pooling": SeqPool(mode=trial.suggest_categorical("pooling", list(pooling_modes))),
                 "preprocess": preprocess_mod,
             },

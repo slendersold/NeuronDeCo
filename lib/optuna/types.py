@@ -102,6 +102,11 @@ class TransformerModelKwargs(TypedDict):
     preprocess: nn.Module
     kernel_freq: NotRequired[int]
     kernel_time: NotRequired[int]
+    use_conv: NotRequired[bool]
+    conv_kernel_size: NotRequired[int]
+    encoder_dropout: NotRequired[float]
+    mlp_dropout: NotRequired[float]
+    conv_dropout: NotRequired[float]
 
 
 class TransformerFoldParams(TypedDict):

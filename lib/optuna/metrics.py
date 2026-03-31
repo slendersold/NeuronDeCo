@@ -4,9 +4,71 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import Callable, List
 
 import numpy as np
+
+
+def cumulative_loss_metric_factory(
+    *, up_weight: float = 1.1, down_weight: float = 1.0
+) -> Callable[[list[float]], float]:
+    """
+    Фабрика метрики в стиле ``*_factory``: возвращает callable ``losses -> metric``.
+
+    Параметры ``up_weight`` / ``down_weight`` фиксируются при создании функции и не
+    передаются при каждом вызове.
+    """
+
+    def _metric(losses: list[float]) -> float:
+        return loss_cumulative_delta(
+            losses, up_weight=up_weight, down_weight=down_weight
+        )
+
+    return _metric
+
+
+def loss_cumulative_delta(
+    losses: list[float], *, up_weight: float = 1.1, down_weight: float = 1.0
+) -> float:
+    """
+    Дискретная кумулятивная метрика по траектории ``val_loss``.
+
+    Инициализация:
+    ``acc = losses[0]``.
+
+    Для каждой следующей эпохи считаем ``delta = cur - prev``:
+    * если ``delta > 0`` (loss вырос), прибавляем ``delta * up_weight``;
+    * иначе прибавляем ``delta * down_weight``.
+
+    При минимизации objective лучше модели с меньшим финальным ``acc``.
+    Если финальный ``acc`` ниже стартового ``losses[0]``, траектория в целом
+    считается устойчиво улучшающейся.
+
+    Parameters
+    ----------
+    losses:
+        Список скаляров ``val_loss`` по эпохам (монотонно растущий индекс = эпоха).
+    up_weight:
+        Штраф на рост loss (обычно > 1).
+    down_weight:
+        Вес на снижение loss (обычно 1.0).
+
+    Returns
+    -------
+    float
+        Финальное значение аккумулятора ``acc``.
+    """
+    if not losses:
+        return 0.0
+    acc = float(losses[0])
+    prev = float(losses[0])
+    for cur_raw in losses[1:]:
+        cur = float(cur_raw)
+        delta = cur - prev
+        weight = up_weight if delta > 0.0 else down_weight
+        acc += delta * weight
+        prev = cur
+    return acc
 
 
 def loss_slope(losses: list[float]) -> float:

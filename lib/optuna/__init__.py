@@ -6,12 +6,17 @@ Import from this package directly.
 
 from lib.optuna.engine import make_objective_engine
 from lib.optuna.fold_runner import run_fold_fn_factory
-from lib.optuna.metrics import aggregate, loss_slope
+from lib.optuna.metrics import (
+    aggregate,
+    cumulative_loss_metric_factory,
+    loss_cumulative_delta,
+    loss_slope,
+)
 from lib.optuna.objectives import attrs_fn, objectives_fn
 from lib.optuna.params_alexnet import params_fn_factory as params_fn_factory_alexnet
 from lib.optuna.params_transformer import params_fn_factory as params_fn_factory_transformer
 from lib.optuna.splits import make_splits_fn_factory
-from lib.optuna.constraints import slope_constraint
+from lib.optuna.constraints import cumulative_loss_constraint, slope_constraint
 from lib.optuna.types import (
     AlexNetFoldParams,
     Attrs,
@@ -40,6 +45,8 @@ __all__ = [
     "FoldResult",
     "FoldTrainingCurves",
     "loss_slope",
+    "loss_cumulative_delta",
+    "cumulative_loss_metric_factory",
     "make_objective_engine",
     "make_splits_fn_factory",
     "objectives_fn",
@@ -49,6 +56,7 @@ __all__ = [
     "params_fn_factory_transformer",
     "run_fold_fn_factory",
     "slope_constraint",
+    "cumulative_loss_constraint",
     "Split",
     "TransformerFoldParams",
     "Values",

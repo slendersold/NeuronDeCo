@@ -8,6 +8,8 @@ from typing import Any
 
 import numpy as np
 
+from lib.optuna.metrics import loss_cumulative_delta
+
 
 def slope_constraint(trial: Any) -> tuple[float]:
     """
@@ -33,7 +35,34 @@ def slope_constraint(trial: Any) -> tuple[float]:
 
         if not slopes:
             return (0.0,)
-        return (float(np.median(slopes)),)
+        return (float(np.median(np.asarray(slopes, dtype=np.float64))),)
+    except Exception as exc:  # keep constraint function non-failing
+        trial.set_user_attr("constraint_error", repr(exc))
+        return (0.0,)
+
+
+def cumulative_loss_constraint(trial: Any) -> tuple[float]:
+    """
+    Feasible when median cumulative accumulator does not exceed start loss.
+    """
+
+    try:
+        fold_curves = trial.user_attrs.get("fold_curves", None)
+        if not fold_curves:
+            return (0.0,)
+
+        deviations: list[float] = []
+        for fc in fold_curves:
+            val_losses = fc.get("val_losses", [])
+            if not val_losses:
+                continue
+            start_loss = float(val_losses[0])
+            cumulative = float(loss_cumulative_delta(val_losses))
+            deviations.append(cumulative - start_loss)
+
+        if not deviations:
+            return (0.0,)
+        return (float(np.median(np.asarray(deviations, dtype=np.float64))),)
     except Exception as exc:  # keep constraint function non-failing
         trial.set_user_attr("constraint_error", repr(exc))
         return (0.0,)
