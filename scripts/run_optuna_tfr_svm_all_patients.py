@@ -3,7 +3,8 @@
 Optuna hyperparameter search: тот же TFR-препроцесс и temporal pooling, что у
 transformer, но классификатор — **sklearn SVC** на признаках после пулинга.
 
-Только **holdout** (без ``--cv``): одно стратифицированное разбиение на train/val.
+По умолчанию — **holdout** (одно разбиение). С флагом ``--cv`` — ``StratifiedKFold``
+внутри objective (число фолдов из ``--test-size``, см. :func:`lib.optuna.splits.make_splits_fn_factory`).
 
 Использует TPESampler / две цели (macro-F1 ↑, cumulative loss metric ↓), как
 ``run_optuna_transformer_all_patients.py``.
@@ -156,7 +157,7 @@ def load_xy(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        description="Optuna TFR + SVM search (holdout only), same preprocess/pooling as transformer."
+        description="Optuna TFR + SVM search (holdout or CV), same preprocess/pooling as transformer."
     )
     p.add_argument(
         "--preprocessed-root",
@@ -185,7 +186,17 @@ def parse_args() -> argparse.Namespace:
         default=1,
         help="SVM fits once on the first epoch; default 1 avoids repeated identical val curves.",
     )
-    p.add_argument("--test-size", type=float, default=0.2)
+    p.add_argument(
+        "--test-size",
+        type=float,
+        default=0.2,
+        help="Holdout: доля validation. With --cv: used as 1/n_splits (n_splits=max(2, round(1/test_size))).",
+    )
+    p.add_argument(
+        "--cv",
+        action="store_true",
+        help="StratifiedKFold inside objective (same semantics as run_optuna_transformer_all_patients.py).",
+    )
     p.add_argument("--cv-aggregate", default="median", choices=["mean", "median"])
     p.add_argument("--event-pos-code", type=int, default=9)
     p.add_argument("--crop-tmin", type=float, default=0.0)
@@ -277,7 +288,7 @@ def main() -> None:
                 make_splits_fn=make_splits_fn_factory(
                     test_size=args.test_size,
                     seed=args.seed,
-                    cv=False,
+                    cv=args.cv,
                 ),
                 run_fold_fn=run_fold_fn_factory(
                     ModelCls=TfrParadigmSvmClassifier,
@@ -324,7 +335,7 @@ def main() -> None:
         "max_epochs": args.max_epochs,
         "patience": patience_disabled,
         "early_stopping": "disabled (patience >= max_epochs)",
-        "cv": False,
+        "cv": args.cv,
         "sampler": "TPESampler (n_startup_trials=40, multivariate, ...)",
         "saved": saved,
         "errors": errors,
