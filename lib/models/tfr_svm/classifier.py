@@ -52,6 +52,12 @@ class TfrParadigmSvmClassifier(nn.Module):
         self.kernel = str(kernel)
         self.svm_gamma: float | str = svm_gamma
         self._pipeline: Pipeline | None = None
+        # ``fold_runner`` всегда строит ``AdamW(model.parameters())``. Часть препроцессоров
+        # без параметров (например ``TFRToSeqFlatten``), у других веса появляются только после
+        # первого ``forward`` (ленивая сборка). Без хотя бы одного ``nn.Parameter`` PyTorch
+        # выдаёт ``ValueError: optimizer got an empty parameter list``. SVM-путь градиенты не
+        # использует — placeholder не участвует в ``fit_from_loader`` / ``forward`` логике.
+        self._adamw_placeholder = nn.Parameter(torch.zeros((), dtype=torch.float32))
 
     def _features(self, x: torch.Tensor) -> torch.Tensor:
         seq = self.preprocess(x)
