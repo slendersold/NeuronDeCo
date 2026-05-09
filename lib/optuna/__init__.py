@@ -14,6 +14,7 @@ from lib.optuna.metrics import (
 )
 from lib.optuna.objectives import attrs_fn, objectives_fn
 from lib.optuna.params_alexnet import params_fn_factory as params_fn_factory_alexnet
+from lib.optuna.params_tfr_svm import params_fn_factory as params_fn_factory_tfr_svm
 from lib.optuna.params_transformer import params_fn_factory as params_fn_factory_transformer
 from lib.optuna.splits import make_splits_fn_factory
 from lib.optuna.constraints import cumulative_loss_constraint, slope_constraint
@@ -25,6 +26,7 @@ from lib.optuna.types import (
     Params,
     Split,
     TransformerFoldParams,
+    TfrSvmFoldParams,
     Values,
 )
 from lib.optuna.study_analyzers import feasible_trials_less_zero, pareto_front
@@ -54,11 +56,13 @@ __all__ = [
     "params_fn_factory",
     "params_fn_factory_alexnet",
     "params_fn_factory_transformer",
+    "params_fn_factory_tfr_svm",
     "run_fold_fn_factory",
     "slope_constraint",
     "cumulative_loss_constraint",
     "Split",
     "TransformerFoldParams",
+    "TfrSvmFoldParams",
     "Values",
     "feasible_trials_less_zero",
     "pareto_front",

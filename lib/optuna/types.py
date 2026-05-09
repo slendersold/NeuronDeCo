@@ -118,6 +118,34 @@ class TransformerFoldParams(TypedDict):
     vl_loader: DataLoaderKwargs
 
 
+# --- TypedDict: TFR preprocess + SeqPool + sklearn SVM head ---
+
+
+class TfrSvmModelKwargs(TypedDict):
+    """
+    Kwargs для :class:`lib.models.tfr_svm.classifier.TfrParadigmSvmClassifier`.
+
+    ``pooling`` / ``preprocess`` — экземпляры ``nn.Module``, как у transformer.
+    ``svm_gamma`` — число для ``rbf`` / ``poly`` / ``sigmoid``; для ``linear`` обычно ``\"scale\"``.
+    """
+
+    num_classes: int
+    preprocess: nn.Module
+    pooling: nn.Module
+    svm_C: float
+    kernel: str
+    svm_gamma: float | str
+
+
+class TfrSvmFoldParams(TypedDict):
+    model: TfrSvmModelKwargs
+    optimizer: AdamWKwargs
+    tr_dataset: TfrDatasetKwargs
+    vl_dataset: TfrDatasetKwargs
+    tr_loader: DataLoaderKwargs
+    vl_loader: DataLoaderKwargs
+
+
 # --- Кривые обучения за один фолд ---
 
 
