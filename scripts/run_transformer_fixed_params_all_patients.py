@@ -10,15 +10,27 @@
 
 Выход: JSON-отчёт в ``--out-dir``, без SQLite.
 
-Пример::
+Режимы параметров (ровно один):
+
+* ``--params-json PATH`` — один JSON на всех субъектов (плоские ключи как ``trial.params``).
+* ``--params-run-dir DIR`` — каталог run Optuna / экспорта ноутбука: для каждого субъекта читается
+  ``DIR/tfr_<subject>_transformer_best_params.json`` (как в ``export_transformer_params_json.ipynb``).
+
+Пример (общий JSON)::
 
     python scripts/run_transformer_fixed_params_all_patients.py \\
       --preprocessed-root /path/to/PreprocessedData \\
-      --out-dir /path/to/PreprocessedData/2026-05-11_fixed \\
+      --out-dir /path/to/out_fixed \\
       --params-json /path/to/best_trial_params.json \\
       --max-epochs 1
 
-``best_trial_params.json`` — объект с ключами как у ``trial.params`` после поиска transformer.
+Пример (по пациенту, как после экспорта из SQLite)::
+
+    python scripts/run_transformer_fixed_params_all_patients.py \\
+      --preprocessed-root /path/to/PreprocessedData \\
+      --out-dir /path/to/out_fixed \\
+      --params-run-dir /path/to/PreprocessedData/2026-05-11 \\
+      --max-epochs 1
 """
 
 from __future__ import annotations
@@ -216,11 +228,19 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="All-patients transformer run with fixed Optuna-style params, no search (default 1 epoch)."
     )
-    p.add_argument(
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument(
         "--params-json",
         type=Path,
-        required=True,
-        help="Path to JSON object: flat hyperparameters like FrozenTrial.params for transformer search.",
+        default=None,
+        help="Single JSON for all subjects (flat keys like FrozenTrial.params).",
+    )
+    g.add_argument(
+        "--params-run-dir",
+        type=Path,
+        default=None,
+        help="Directory with per-subject exports: tfr_<subject>_transformer_best_params.json "
+        "(same folder as Optuna *.db).",
     )
     p.add_argument("--preprocessed-root", type=Path, default=None)
     p.add_argument("--out-dir", type=Path, required=True)
@@ -239,20 +259,41 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
+def _load_flat_params(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        raise FileNotFoundError(str(path))
+    with open(path, encoding="utf-8") as fh:
+        obj = json.load(fh)
+    if not isinstance(obj, dict):
+        raise ValueError("JSON root must be an object")
+    return dict(obj)
+
+
+def params_json_path_for_subject(run_dir: Path, subject_id: str) -> Path:
+    """Имя как у ноутбука export_transformer_params_json рядом с ``tfr_<id>_transformer.db``."""
+    stem = f"tfr_{subject_id}_transformer"
+    return (run_dir / f"{stem}_best_params.json").resolve()
+
+
 def main() -> None:
     args = parse_args()
     project_root = _PROJECT_ROOT
 
-    params_path = args.params_json.expanduser().resolve()
-    if not params_path.is_file():
-        die(f"--params-json not found: {params_path}")
+    params_run_dir: Path | None = None
+    shared_flat: dict[str, Any] | None = None
+    params_path: Path | None = None
 
-    with open(params_path, encoding="utf-8") as fh:
-        flat_params = json.load(fh)
-    if not isinstance(flat_params, dict):
-        die("--params-json must be a JSON object")
-    # normalise nested optuna dumps
-    trial_like = dict(flat_params)
+    if args.params_run_dir is not None:
+        params_run_dir = args.params_run_dir.expanduser().resolve()
+        if not params_run_dir.is_dir():
+            die(f"--params-run-dir is not a directory: {params_run_dir}")
+    else:
+        assert args.params_json is not None
+        params_path = args.params_json.expanduser().resolve()
+        try:
+            shared_flat = _load_flat_params(params_path)
+        except (FileNotFoundError, ValueError) as e:
+            die(f"--params-json: {e}")
 
     if args.preprocessed_root is not None:
         preprocessed_root = args.preprocessed_root.expanduser().resolve()
@@ -300,6 +341,16 @@ def main() -> None:
     for subject_id in subjects:
         log(f"=== Subject {subject_id} ===")
         try:
+            if params_run_dir is not None:
+                pj = params_json_path_for_subject(params_run_dir, subject_id)
+                trial_like = _load_flat_params(pj)
+                params_used = str(pj)
+            else:
+                assert shared_flat is not None
+                assert params_path is not None
+                trial_like = shared_flat
+                params_used = str(params_path)
+
             tfr_path = resolve_tfr_path(
                 subject_id, preprocessed_root=preprocessed_root, project_root=project_root
             )
@@ -326,6 +377,7 @@ def main() -> None:
             f1_agg, loss_agg = objectives_fn(fold_results, args.cv_aggregate)
 
             per_subject[subject_id] = {
+                "params_json_used": params_used,
                 "tfr_path": str(tfr_path),
                 "num_classes": num_classes,
                 "seq_len": int(t_bins),
@@ -359,10 +411,12 @@ def main() -> None:
             "Emulates objective stack of run_optuna_transformer_all_patients.py: "
             "same splits/run_fold/objectives_fn, fixed flat params from JSON, no Optuna."
         ),
+        "params_mode": "per_subject_run_dir" if params_run_dir else "single_json",
+        "params_run_dir": str(params_run_dir) if params_run_dir else None,
+        "params_json_single": str(params_path) if params_path is not None else None,
         "preprocessed_root": str(preprocessed_root),
         "out_dir": str(out_dir),
-        "params_json_path": str(params_path),
-        "params_flat": trial_like,
+        "params_flat_snapshot": shared_flat if shared_flat is not None else None,
         "subjects": subjects,
         "max_epochs": args.max_epochs,
         "patience": patience,
