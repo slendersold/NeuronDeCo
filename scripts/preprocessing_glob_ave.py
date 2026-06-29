@@ -10,12 +10,13 @@ sys.path.append(str(pirogov_root))
 print("Added to PYTHONPATH:", project_root, pirogov_root)
 
 # === Импорты проекта ===
-from utils.analysis_pipeline import (
+from lib.data.analysis_pipeline import (
     load_and_preprocess,
     create_epochs,
     save_epochs,
 )
-from utils.config import best_ch_by_power
+from lib.data.raw_preprocessing import apply_notch_bandpass_car
+from lib.data.config import best_ch_by_power, epoch_thresh_dict
 
 # === Библиотеки ===
 import sys
@@ -74,7 +75,14 @@ def run_car_epochs_tfr_all_subjects(
     for subject in subjects:
         try:
             # 1) load
-            raws = load_and_preprocess(root, subject, strategy=strategy, plot_psd=False, autoclean=True)
+            raws = load_and_preprocess(
+                root,
+                subject,
+                strategy=strategy,
+                plot_psd=False,
+                autoclean=True,
+                best_ch_by_power=best_ch_by_power,
+            )
             results["files_list"][subject] = raws
 
             # 2) determine sfreq (если не дали вручную)
@@ -87,17 +95,14 @@ def run_car_epochs_tfr_all_subjects(
             # 4) preprocess: notch + bandpass -> CAR
             clean_list = []
             for raw in raws:
-                r = raw.copy().load_data()
-                r.notch_filter(freqs=notch_freqs, n_jobs=notch_n_jobs)
-                r.filter(l_freq=l_freq, h_freq=h_freq, method="iir")
-
-                X = r.get_data()
-                X = X - X.mean(axis=0, keepdims=True)
-
-                info = r.info.copy()
-                r_car = mne.io.RawArray(X, info)
-                r_car.set_annotations(r.annotations)
-
+                r_car = apply_notch_bandpass_car(
+                    raw,
+                    notch_freqs=notch_freqs,
+                    l_freq=l_freq,
+                    h_freq=h_freq,
+                    method="iir",
+                    n_jobs=notch_n_jobs,
+                )
                 clean_list.append(r_car)
 
             results["clean"][subject] = clean_list
@@ -110,6 +115,7 @@ def run_car_epochs_tfr_all_subjects(
                 threshold=epochs_threshold,                 # если None — внутри create_epochs возьмется epoch_thresh_dict[subject]
                 event_id=[*events_avg, *event_single],
                 ctx=epochs_ctx,
+                epoch_thresh_dict=epoch_thresh_dict,
             )
             results["epochs_list"][subject] = epochs_list
 

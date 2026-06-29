@@ -1,0 +1,66 @@
+# Раскладка NeuronDeCo
+
+## Каталоги
+
+| Путь | Назначение |
+|------|------------|
+| `lib/` | Код проекта: данные, обучение, модели, Optuna, режимы, `core` |
+| `examples/` | Скрипты запуска без Jupyter |
+| `notebooks/` | Эксперименты; `lib_only_tfr_pipeline.ipynb` — только импорты из `lib` |
+| `utils/` | Старые пути импорта; часть модулей реэкспортирует `lib` |
+
+## Данные и циклы обучения (`lib`)
+
+- `lib/data/` — `TFRDataset`
+- `lib/training/` — `train_one_epoch`, `eval_one_epoch_f1_macro`
+- `lib/modes/` — в т.ч. `offline_tfr_supervised` для `nn.Module`
+
+## Модели
+
+- **`lib/models/alexnet/`** — разбор AlexNet-TFR: `backbone.py`, `head.py`, `model.py`.
+- **`lib/models/tfr_transformer/`** — код из `notebooks/transformer_17_03_26.ipynb`: препроцессинг, `TFRSequenceTransformer`, `TFRTransformerWrapper`. Логиты классов на каждом шаге времени + `SeqPool` → `[B, num_classes]` (совместимо с `cross_entropy`).
+
+Публичные импорты: `lib.models.AlexNetTFR`, `lib.models.TFRTransformerWrapper`.  
+`lib/AlexNet/AlexNet.py` и `utils/AlexNet.py` — тонкие реэкспорты для старых путей импорта.
+
+## Optuna objective engine
+
+Пакет **`lib/optuna/`**:
+
+| Файл | Роль |
+|------|------|
+| `types.py` | `Split`, `FoldResult`, `Params`, … |
+| `metrics.py` | `loss_slope` (устойчив к 1 эпохе / сбою polyfit), `aggregate` |
+| `splits.py` | `make_splits_fn_factory` |
+| `fold_runner.py` | `run_fold_fn_factory` |
+| `params_alexnet.py` | `params_fn_factory` (= AlexNet) |
+| `params_transformer.py` | `params_fn_factory_transformer` (+ `seq_len` из `X.shape[3]`) |
+| `objectives.py` | `objectives_fn`, `attrs_fn` |
+| `engine.py` | `make_objective_engine` |
+
+`lib/optuna_objective_makers.py` — по желанию тонкий shim (`from lib.optuna import *`) или ваша монолитная версия; пакет `lib/optuna/` не зависит от этого файла.
+
+## Типизация и формы тензоров
+
+- **`lib/core/tensors.py`** — соглашения по осям `N, C, F, T, K` и алиасы NumPy (`TFRFeatureArray`, `EpochLabelsArray`, …).
+- **`lib/core/contracts.py`** — `TorchTFRClassifier` (вход `(B,C,F,T)`, выход `(B,K)`), `SklearnLikeModel` / `Model` для режимов.
+- **`lib/models/alexnet/typing.py`**, **`lib/models/tfr_transformer/typing.py`** — алиасы `torch.Tensor` с семантикой по методикам.
+- **`lib/optuna/types.py`** — `TypedDict`: `AlexNetFoldParams`, `TransformerFoldParams`, `FoldTrainingCurves`, плюс общий `Params`.
+
+## Ноутбук transformer
+
+Вместо дублирования ячеек с классами:
+
+```python
+from lib.models.tfr_transformer import TFRTransformerWrapper
+from lib.optuna import (
+    params_fn_factory_transformer,
+    make_objective_engine,
+    make_splits_fn_factory,
+    run_fold_fn_factory,
+    loss_slope,
+    objectives_fn,
+    attrs_fn,
+)
+# params_fn = params_fn_factory_transformer(num_classes=2, seq_len=X.shape[3])
+```
