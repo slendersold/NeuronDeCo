@@ -1,0 +1,22 @@
+# Optional explicit Optuna study mapping.
+# Use when studies are spread across directories or names differ from defaults.
+
+optuna:
+  run_dir: /ABSOLUTE/PATH/TO/CANONICAL_RUN
+
+trial_selection:
+  selector: top5_f1_then_min_loss
+
+studies:
+  - patient: s11
+    model: svm
+    storage: /ABSOLUTE/PATH/TO/CANONICAL_RUN/tfr_s11_tfr_svm.db
+    study_name: tfr_s11_tfr_svm
+  - patient: s11
+    model: alexnet
+    storage: /ABSOLUTE/PATH/TO/CANONICAL_RUN/tfr_s11_alexnet.db
+    study_name: tfr_s11_alexnet
+  - patient: s11
+    model: transformer
+    storage: /ABSOLUTE/PATH/TO/CANONICAL_RUN/tfr_s11_transformer.db
+    study_name: tfr_s11_transformer

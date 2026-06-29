@@ -1,0 +1,69 @@
+# Confirmatory analysis configuration template.
+# Copy to confirmatory.yaml and fill absolute paths before running.
+
+input_preset: optuna_original
+event_pos_code: 9
+
+optuna:
+  # Canonical Optuna run directory with tfr_<patient>_<model>.db files.
+  run_dir: /ABSOLUTE/PATH/TO/CANONICAL_RUN
+
+data:
+  preprocessed_root: /ABSOLUTE/PATH/TO/PREPROCESSED_DATA
+  tfr_subdir: specs_with_car
+  tfr_pattern: "tfr_{patient}.fif"
+  external_config: /ABSOLUTE/PATH/TO/config.py
+  # Optional; used only to enrich session / epoch_id when row count matches TFR.
+  sample_manifest: /ABSOLUTE/PATH/TO/sample_manifest.csv
+
+output:
+  root: /ABSOLUTE/PATH/TO/confirmatory_analysis
+
+cv:
+  n_splits: 5
+  seed: 42
+
+training:
+  max_epochs: 100
+  inner_val_fraction: 0.15
+  inner_val_seed: 42
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.001
+
+trial_selection:
+  selector: top5_f1_then_min_loss
+
+runtime:
+  device: cuda
+  seed: 42
+  num_workers: 0
+  n_jobs: 1
+
+# Default full cohort (override with --patients for pilot).
+patients:
+  - s02
+  - s03
+  - s04
+  - s05
+  - s06
+  - s07
+  - s09
+  - s10
+  - s11
+  - s12
+  - s13
+  - s15
+
+models:
+  - svm
+  - alexnet
+  - transformer
+
+# Optional explicit study overrides (otherwise auto-discovered from optuna.run_dir).
+studies: []
+# Example override:
+# studies:
+#   - patient: s11
+#     model: alexnet
+#     storage: /ABSOLUTE/PATH/TO/CANONICAL_RUN/tfr_s11_alexnet.db
+#     study_name: tfr_s11_alexnet

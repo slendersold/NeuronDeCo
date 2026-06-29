@@ -41,6 +41,7 @@ class TfrParadigmSvmClassifier(nn.Module):
         svm_C: float = 1.0,
         kernel: str = "rbf",
         svm_gamma: float | str = "scale",
+        probability: bool = True,
     ) -> None:
         super().__init__()
         if pooling.mode == "none":
@@ -51,6 +52,7 @@ class TfrParadigmSvmClassifier(nn.Module):
         self.svm_C = float(svm_C)
         self.kernel = str(kernel)
         self.svm_gamma: float | str = svm_gamma
+        self.probability = bool(probability)
         self._pipeline: Pipeline | None = None
         # ``fold_runner`` всегда строит ``AdamW(model.parameters())``. Часть препроцессоров
         # без параметров (например ``TFRToSeqFlatten``), у других веса появляются только после
@@ -82,7 +84,7 @@ class TfrParadigmSvmClassifier(nn.Module):
         kw: dict[str, Any] = {
             "C": self.svm_C,
             "kernel": self.kernel,
-            "probability": True,
+            "probability": self.probability,
             "random_state": 0,
         }
         if self.kernel in ("rbf", "poly", "sigmoid"):
@@ -98,5 +100,14 @@ class TfrParadigmSvmClassifier(nn.Module):
         self.eval()
         feats = self._features(x)
         X = feats.cpu().numpy()
-        proba = self._pipeline.predict_proba(X)
-        return torch.from_numpy(proba).to(dtype=torch.float32, device=x.device)
+        if self.probability:
+            out = self._pipeline.predict_proba(X)
+        else:
+            decision = self._pipeline.decision_function(X)
+            if decision.ndim == 1:
+                # Binary: map scalar decision to pseudo-proba for API compatibility.
+                pos = 1.0 / (1.0 + np.exp(-decision))
+                out = np.column_stack([1.0 - pos, pos])
+            else:
+                raise ValueError("probability=False with multi-class is unsupported in forward.")
+        return torch.from_numpy(out).to(dtype=torch.float32, device=x.device)
