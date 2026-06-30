@@ -628,12 +628,55 @@ def _rebuild_json_value(value: Any) -> Any:
     return value
 
 
+def _finalize_model_kwargs(
+    model_name: str,
+    model: dict[str, Any],
+    *,
+    in_channels: int,
+    num_classes: int,
+    seq_len: int,
+) -> dict[str, Any]:
+    """Keep only constructor kwargs valid for the target model class."""
+    out = dict(model)
+    out["num_classes"] = int(num_classes)
+
+    if model_name == "svm":
+        out.pop("in_channels", None)
+        out.pop("seq_len", None)
+        if "probability" not in out:
+            out["probability"] = False
+        allowed = {
+            "num_classes",
+            "preprocess",
+            "pooling",
+            "svm_C",
+            "kernel",
+            "svm_gamma",
+            "probability",
+        }
+        return {k: v for k, v in out.items() if k in allowed}
+
+    if model_name == "alexnet":
+        out["in_channels"] = int(in_channels)
+        out.pop("seq_len", None)
+        allowed = {"in_channels", "num_classes", "dropout"}
+        return {k: v for k, v in out.items() if k in allowed}
+
+    if model_name == "transformer":
+        out["seq_len"] = int(seq_len)
+        out.pop("in_channels", None)
+        return out
+
+    raise ValueError(f"Unsupported model: {model_name!r}")
+
+
 def params_from_user_attrs(
     user_attrs: Mapping[str, Any],
     *,
-    in_channels: int | None = None,
-    num_classes: int | None = None,
-    seq_len: int | None = None,
+    model_name: str,
+    in_channels: int,
+    num_classes: int,
+    seq_len: int,
 ) -> Params | None:
     """Deserialize nested ``user_attrs['params']`` saved by Optuna ``attrs_fn``."""
     raw = user_attrs.get("params")
@@ -643,17 +686,13 @@ def params_from_user_attrs(
     if not isinstance(bundle, dict):
         return None
 
-    model = dict(bundle.get("model", {}))
-    if in_channels is not None:
-        model["in_channels"] = int(in_channels)
-    if num_classes is not None:
-        model["num_classes"] = int(num_classes)
-    if seq_len is not None:
-        model["seq_len"] = int(seq_len)
-
-    # Confirmatory SVM should not rely on Platt probabilities.
-    if "probability" not in model and "kernel" in model:
-        model["probability"] = False
+    model = _finalize_model_kwargs(
+        model_name,
+        dict(bundle.get("model", {})),
+        in_channels=in_channels,
+        num_classes=num_classes,
+        seq_len=seq_len,
+    )
 
     return {
         "model": model,
@@ -768,6 +807,7 @@ def build_params_for_model(
     """Prefer deserialized user_attrs; fall back to flat trial.params."""
     from_attrs = params_from_user_attrs(
         user_attrs,
+        model_name=model,
         in_channels=in_channels,
         num_classes=num_classes,
         seq_len=seq_len,
