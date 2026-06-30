@@ -514,6 +514,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             fold_table = build_fold_assignment_table(loaded.metadata, splits)
             patient_fold_path = output_root / patient / "fold_assignments.csv"
+            patient_fold_path.parent.mkdir(parents=True, exist_ok=True)
             fold_table.to_csv(patient_fold_path, index=False)
             root_fold_path = output_root / "fold_assignments.csv"
             if root_fold_path.is_file():
