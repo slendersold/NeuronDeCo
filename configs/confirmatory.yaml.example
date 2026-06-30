@@ -9,15 +9,15 @@ optuna:
   run_dir: /ABSOLUTE/PATH/TO/CANONICAL_RUN
 
 data:
-  preprocessed_root: /ABSOLUTE/PATH/TO/PREPROCESSED_DATA
+  preprocessed_root: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/
   tfr_subdir: specs_with_car
   tfr_pattern: "tfr_{patient}.fif"
-  external_config: /ABSOLUTE/PATH/TO/config.py
+  external_config: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/config.py
   # Optional; used only to enrich session / epoch_id when row count matches TFR.
   sample_manifest: /ABSOLUTE/PATH/TO/sample_manifest.csv
 
 output:
-  root: /ABSOLUTE/PATH/TO/confirmatory_analysis
+  root: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/confirmatory_analysis
 
 cv:
   n_splits: 5
@@ -27,7 +27,7 @@ training:
   max_epochs: 100
   inner_val_fraction: 0.15
   inner_val_seed: 42
-  early_stopping_patience: 10
+  early_stopping_patience: 100
   early_stopping_min_delta: 0.001
 
 trial_selection:

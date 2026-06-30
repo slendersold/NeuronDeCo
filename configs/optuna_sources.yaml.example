@@ -2,7 +2,7 @@
 # Use when studies are spread across directories or names differ from defaults.
 
 optuna:
-  run_dir: /ABSOLUTE/PATH/TO/CANONICAL_RUN
+  run_dir: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/
 
 trial_selection:
   selector: top5_f1_then_min_loss
@@ -10,13 +10,13 @@ trial_selection:
 studies:
   - patient: s11
     model: svm
-    storage: /ABSOLUTE/PATH/TO/CANONICAL_RUN/tfr_s11_tfr_svm.db
+    storage: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s11_tfr_svm.db
     study_name: tfr_s11_tfr_svm
   - patient: s11
     model: alexnet
-    storage: /ABSOLUTE/PATH/TO/CANONICAL_RUN/tfr_s11_alexnet.db
+    storage: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s11_alexnet.db
     study_name: tfr_s11_alexnet
   - patient: s11
     model: transformer
-    storage: /ABSOLUTE/PATH/TO/CANONICAL_RUN/tfr_s11_transformer.db
+    storage: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s11_transformer.db
     study_name: tfr_s11_transformer

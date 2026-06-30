@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 # === Настройка путей проекта ===
-project_root = Path("/trinity/home/asma.benachour/notebooks/Pirogov/MNE_playground")
+project_root = Path("/trinity/home/asma.benachour/notebooks/Pirogov/NeuronDeCo")
 pirogov_root = Path("/trinity/home/asma.benachour/notebooks/Pirogov/PirogovDATA")
 
 sys.path.append(str(project_root))
