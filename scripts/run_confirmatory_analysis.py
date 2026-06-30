@@ -160,7 +160,8 @@ def validate_config(cfg: ConfirmatoryConfig, *, dry_run: bool) -> list[str]:
     issues: list[str] = []
     for label, path, _desc in paths_checklist(cfg):
         if path is None:
-            issues.append(f"Missing required path: {label}")
+            if label != "data.sample_manifest":
+                issues.append(f"Missing required path: {label}")
         elif label != "data.sample_manifest" and not dry_run:
             if label.startswith("optuna") and not path.exists():
                 issues.append(f"Path does not exist: {label} -> {path}")
