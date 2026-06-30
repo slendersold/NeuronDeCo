@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 import traceback
+import warnings
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -266,7 +267,13 @@ def load_tfr_xy_metadata(
   Order of epochs follows ``tfr.events`` row order after MNE ``read_tfrs`` /
   ``crop`` — identical to ``load_xy`` when using the same preset.
     """
-    tfr_list = mne.time_frequency.read_tfrs(str(tfr_path))
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message=".*does not conform to MNE naming conventions.*",
+            category=RuntimeWarning,
+        )
+        tfr_list = mne.time_frequency.read_tfrs(str(tfr_path))
     if not tfr_list:
         raise ValueError("read_tfrs returned empty list")
     tfr = tfr_list[0]
@@ -611,14 +618,16 @@ def _rebuild_json_value(value: Any) -> Any:
             if t == "TFRToSeqFlatten":
                 return PREPROCESS_BUILDERS["flatten"]()
             if t == "TFRToSeqChannelConvCollapse":
-                return PREPROCESS_BUILDERS["channel_conv"]()
+                from lib.models.tfr_transformer.preprocess import TFRToSeqChannelConvCollapse
+
+                return TFRToSeqChannelConvCollapse(bias=bool(value.get("bias", True)))
             if t == "TFRToSeqFTPlaneConvCollapse":
                 from lib.models.tfr_transformer.preprocess import TFRToSeqFTPlaneConvCollapse
 
                 return TFRToSeqFTPlaneConvCollapse(
                     kernel_freq=int(value.get("kernel_freq", 3)),
                     kernel_time=int(value.get("kernel_time", 3)),
-                    bias_enabled=bool(value.get("bias", True)),
+                    bias=bool(value.get("bias", True)),
                 )
             if t == "TFRToSeqPixelWeightCollapse":
                 return PREPROCESS_BUILDERS["pixel_weight"]()
@@ -804,16 +813,19 @@ def build_params_for_model(
     num_classes: int,
     seq_len: int,
 ) -> Params:
-    """Prefer deserialized user_attrs; fall back to flat trial.params."""
-    from_attrs = params_from_user_attrs(
-        user_attrs,
-        model_name=model,
-        in_channels=in_channels,
-        num_classes=num_classes,
-        seq_len=seq_len,
-    )
-    if from_attrs is not None:
-        return from_attrs
+    """Prefer deserialized user_attrs; fall back to flat trial.params on failure."""
+    try:
+        from_attrs = params_from_user_attrs(
+            user_attrs,
+            model_name=model,
+            in_channels=in_channels,
+            num_classes=num_classes,
+            seq_len=seq_len,
+        )
+        if from_attrs is not None:
+            return from_attrs
+    except (TypeError, ValueError, KeyError):
+        pass
 
     if model == "alexnet":
         return params_from_flat_alexnet(
