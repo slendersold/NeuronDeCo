@@ -1,0 +1,148 @@
+trial_selection:
+  selector: top5_f1_then_min_loss
+
+studies:
+  - patient: s02
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s02_tfr_svm.db
+    study_name: tfr_s02_tfr_svm
+  - patient: s03
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s03_tfr_svm.db
+    study_name: tfr_s03_tfr_svm
+  - patient: s04
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s04_tfr_svm.db
+    study_name: tfr_s04_tfr_svm
+  - patient: s05
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s05_tfr_svm.db
+    study_name: tfr_s05_tfr_svm
+  - patient: s06
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s06_tfr_svm.db
+    study_name: tfr_s06_tfr_svm
+  - patient: s07
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s07_tfr_svm.db
+    study_name: tfr_s07_tfr_svm
+  - patient: s09
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s09_tfr_svm.db
+    study_name: tfr_s09_tfr_svm
+  - patient: s10
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s10_tfr_svm.db
+    study_name: tfr_s10_tfr_svm
+  - patient: s11
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s11_tfr_svm.db
+    study_name: tfr_s11_tfr_svm
+  - patient: s12
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s12_tfr_svm.db
+    study_name: tfr_s12_tfr_svm
+  - patient: s13
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s13_tfr_svm.db
+    study_name: tfr_s13_tfr_svm
+  - patient: s15
+    model: svm
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s15_tfr_svm.db
+    study_name: tfr_s15_tfr_svm
+  - patient: s02
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s02_alexnet.db
+    study_name: tfr_s02_alexnet
+  - patient: s03
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s03_alexnet.db
+    study_name: tfr_s03_alexnet
+  - patient: s04
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s04_alexnet.db
+    study_name: tfr_s04_alexnet
+  - patient: s05
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s05_alexnet.db
+    study_name: tfr_s05_alexnet
+  - patient: s06
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s06_alexnet.db
+    study_name: tfr_s06_alexnet
+  - patient: s07
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s07_alexnet.db
+    study_name: tfr_s07_alexnet
+  - patient: s09
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s09_alexnet.db
+    study_name: tfr_s09_alexnet
+  - patient: s10
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s10_alexnet.db
+    study_name: tfr_s10_alexnet
+  - patient: s11
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s11_alexnet.db
+    study_name: tfr_s11_alexnet
+  - patient: s12
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s12_alexnet.db
+    study_name: tfr_s12_alexnet
+  - patient: s13
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s13_alexnet.db
+    study_name: tfr_s13_alexnet
+  - patient: s15
+    model: alexnet
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s15_alexnet.db
+    study_name: tfr_s15_alexnet
+  - patient: s02
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s02_transformer.db
+    study_name: tfr_s02_transformer
+  - patient: s03
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s03_transformer.db
+    study_name: tfr_s03_transformer
+  - patient: s04
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s04_transformer.db
+    study_name: tfr_s04_transformer
+  - patient: s05
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s05_transformer.db
+    study_name: tfr_s05_transformer
+  - patient: s06
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s06_transformer.db
+    study_name: tfr_s06_transformer
+  - patient: s07
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s07_transformer.db
+    study_name: tfr_s07_transformer
+  - patient: s09
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s09_transformer.db
+    study_name: tfr_s09_transformer
+  - patient: s10
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s10_transformer.db
+    study_name: tfr_s10_transformer
+  - patient: s11
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s11_transformer.db
+    study_name: tfr_s11_transformer
+  - patient: s12
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s12_transformer.db
+    study_name: tfr_s12_transformer
+  - patient: s13
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s13_transformer.db
+    study_name: tfr_s13_transformer
+  - patient: s15
+    model: transformer
+    storage: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s15_transformer.db
+    study_name: tfr_s15_transformer

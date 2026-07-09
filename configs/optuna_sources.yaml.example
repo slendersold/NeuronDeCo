@@ -1,0 +1,22 @@
+# Optional explicit Optuna study mapping.
+# Use when studies are spread across directories or names differ from defaults.
+
+optuna:
+  run_dir: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/
+
+trial_selection:
+  selector: top5_f1_then_min_loss
+
+studies:
+  - patient: s11
+    model: svm
+    storage: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-05-10/tfr_s11_tfr_svm.db
+    study_name: tfr_s11_tfr_svm
+  - patient: s11
+    model: alexnet
+    storage: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s11_alexnet.db
+    study_name: tfr_s11_alexnet
+  - patient: s11
+    model: transformer
+    storage: /trinity/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01/tfr_s11_transformer.db
+    study_name: tfr_s11_transformer

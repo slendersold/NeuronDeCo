@@ -1,0 +1,55 @@
+input_preset: optuna_original
+event_pos_code: 9
+
+optuna:
+  run_dir: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/2026-04-01
+
+data:
+  preprocessed_root: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData
+  tfr_subdir: specs_with_car
+  tfr_pattern: "tfr_{patient}.fif"
+  external_config: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/config.py
+
+output:
+  root: /beegfs/home/t.samsonov/notebooks/Pirogov/PreprocessedData/confirmatory_analysis
+
+cv:
+  n_splits: 5
+  seed: 42
+
+training:
+  max_epochs: 100
+  inner_val_fraction: 0.15
+  inner_val_seed: 42
+  early_stopping_patience: 100
+  early_stopping_min_delta: 0.001
+
+trial_selection:
+  selector: top5_f1_then_min_loss
+
+runtime:
+  device: cuda
+  seed: 42
+  num_workers: 0
+  n_jobs: 1
+
+patients:
+#  - s02
+#  - s03
+  - s04
+  - s05
+  - s06
+  - s07
+  - s09
+  - s10
+  - s11
+  - s12
+  - s13
+  - s15
+
+models:
+  - svm
+  - alexnet
+  - transformer
+
+studies: []
