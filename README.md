@@ -453,18 +453,11 @@ Some scripts are used for additional experiments, including fixed-configuration 
 
 These scripts are not part of the core pipeline and may change independently from the main library code.
 
-Current scripts include:
-
-- preprocessing notebooks for generating TFR representations;
-- Optuna hyperparameter optimization scripts;
-- confirmatory evaluation pipeline;
-- visualization of evaluation results;
-- Optuna study export utilities;
-- ablation experiments.
-
-These tools should be regarded as reference implementations rather than stable interfaces.
-
 ---
+
+<!-- ---------------------------------------------------------------------- -->
+<!-- END CUTTABLE BLOCK                                                      -->
+<!-- ---------------------------------------------------------------------- -->
 
 ## License
 
