@@ -69,6 +69,8 @@ class InputPresetSpec:
     crop_tmax: float
     freq_slice: str
     description: str
+    trim_start_time_bins: int = 0
+    trim_end_time_bins: int = 0
 
 
 INPUT_PRESETS: dict[str, InputPresetSpec] = {
@@ -85,6 +87,29 @@ INPUT_PRESETS: dict[str, InputPresetSpec] = {
         crop_tmax=1.0,
         freq_slice="band_0p1_30",
         description="Optional sensitivity preset: marker [0,1]s; keep 0.1-30 Hz only.",
+    ),
+    "allch_100ms_2000ms": InputPresetSpec(
+        name="allch_100ms_2000ms",
+        crop_tmin=0.1,
+        crop_tmax=2.0,
+        freq_slice="band_0p1_59p4",
+        description="All-channel benchmark: marker-relative [0.1,2.0]s and 0.1-59.4 Hz.",
+    ),
+    "allch_100ms_1000ms": InputPresetSpec(
+        name="allch_100ms_1000ms",
+        crop_tmin=0.1,
+        crop_tmax=1.0,
+        freq_slice="band_0p1_59p4",
+        description="All-channel benchmark: marker-relative [0.1,1.0]s and 0.1-59.4 Hz.",
+    ),
+    "allch_0ms_1000ms_trim100_400": InputPresetSpec(
+        name="allch_0ms_1000ms_trim100_400",
+        crop_tmin=0.0,
+        crop_tmax=1.0,
+        freq_slice="band_0p1_59p4",
+        description="All-channel benchmark: [0,1]s, time bins [100:-400], 0.1-59.4 Hz.",
+        trim_start_time_bins=100,
+        trim_end_time_bins=400,
     ),
 }
 
@@ -250,6 +275,13 @@ def _apply_freq_slice(X: np.ndarray, preset: InputPresetSpec, freqs: np.ndarray 
         if not np.any(mask):
             raise ValueError("No frequency bins in [0.1, 30] Hz")
         return X[:, :, mask, :]
+    if preset.freq_slice == "band_0p1_59p4":
+        if freqs is None:
+            raise ValueError(f"{preset.name} requires frequency axis from TFR")
+        mask = (freqs >= 0.1) & (freqs <= 59.4)
+        if not np.any(mask):
+            raise ValueError("No frequency bins in [0.1, 59.4] Hz")
+        return X[:, :, mask, :]
     raise ValueError(f"Unsupported freq_slice={preset.freq_slice!r}")
 
 
@@ -293,8 +325,18 @@ def load_tfr_xy_metadata(
 
     if freqs is not None and len(freqs) != X_full.shape[2]:
         freqs = freqs[: X_full.shape[2]]
-    if times is not None and len(times) != X_full.shape[3]:
-        times = times[: X_full.shape[3]]
+    times = np.asarray(tfr.times, dtype=float) if hasattr(tfr, "times") else None
+
+    trim_stop = -preset.trim_end_time_bins if preset.trim_end_time_bins else None
+    X_full = X_full[:, :, :, preset.trim_start_time_bins:trim_stop]
+    if X_full.shape[3] == 0:
+        raise ValueError(
+            f"No time bins remain for {preset.name} after slice "
+            f"[{preset.trim_start_time_bins}:"
+            f"{-preset.trim_end_time_bins if preset.trim_end_time_bins else 'end'}]"
+        )
+    if times is not None:
+        times = times[preset.trim_start_time_bins:trim_stop]
 
     X_raw = _apply_freq_slice(X_full, preset, freqs).astype(np.float32)
     n_epochs = X_raw.shape[0]

@@ -117,7 +117,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument("--folds", nargs="*", type=int, default=None, help="Subset of fold ids, e.g. 0 1 2")
     p.add_argument(
         "--input-preset",
-        choices=["optuna_original", "compact_ablation"],
+        choices=sorted(cs.INPUT_PRESETS),
         default=None,
     )
     p.add_argument("--resume", action="store_true")
