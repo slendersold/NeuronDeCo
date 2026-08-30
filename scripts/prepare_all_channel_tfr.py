@@ -21,6 +21,62 @@ from stage3_fixed_svm_ablation import (
 )
 
 
+POSITIVE_EVENT_CODE = 9
+
+
+def restore_manifest_event_codes(epochs: mne.Epochs) -> dict[str, object]:
+    """Restore original gesture codes carried by the frozen sample manifest.
+
+    ``stage3_fixed_svm_ablation`` uses MNE event values 1/2 internally and keeps
+    the authoritative binary label and original gesture code in epoch metadata.
+    The established saved-TFR pipeline, however, keeps gesture codes 1..10 and
+    downstream model loaders identify ``open_hand`` by code 9.  Restore that
+    established representation before computing and saving the TFR.
+    """
+    if epochs.metadata is None:
+        raise RuntimeError("Epoch metadata is required to restore event codes")
+
+    required = {"event_code", "class_label"}
+    missing = required.difference(epochs.metadata.columns)
+    if missing:
+        raise RuntimeError(f"Epoch metadata is missing columns: {sorted(missing)}")
+
+    event_codes = epochs.metadata["event_code"].astype(int).to_numpy()
+    class_labels = epochs.metadata["class_label"].astype(int).to_numpy()
+    if len(event_codes) != len(epochs):
+        raise RuntimeError(
+            f"Epoch metadata length mismatch: {len(event_codes)} != {len(epochs)}"
+        )
+
+    labels, label_counts = np.unique(class_labels, return_counts=True)
+    if set(labels.tolist()) != {0, 1}:
+        raise RuntimeError(
+            "Expected both manifest classes 0 and 1 before TFR computation; "
+            f"got {dict(zip(labels.tolist(), label_counts.tolist()))}"
+        )
+
+    labels_from_codes = (event_codes == POSITIVE_EVENT_CODE).astype(int)
+    if not np.array_equal(labels_from_codes, class_labels):
+        mismatch = int(np.count_nonzero(labels_from_codes != class_labels))
+        raise RuntimeError(
+            f"Manifest event_code/class_label mismatch in {mismatch} epochs; "
+            f"positive event code is expected to be {POSITIVE_EVENT_CODE}"
+        )
+
+    epochs.events[:, 2] = event_codes
+    unique_codes = sorted(np.unique(event_codes).tolist())
+    epochs.event_id = {f"gesture_{code}": int(code) for code in unique_codes}
+
+    return {
+        "event_codes": unique_codes,
+        "positive_event_code": POSITIVE_EVENT_CODE,
+        "class_counts": {
+            str(label): int(count)
+            for label, count in zip(labels.tolist(), label_counts.tolist())
+        },
+    }
+
+
 def make_settings(args: argparse.Namespace, patient: str) -> Settings:
     """Create the preprocessing settings shared with the audited raw-data path."""
     return Settings(
@@ -104,6 +160,9 @@ def prepare_patient(args: argparse.Namespace, patient: str) -> Path:
             f"{epochs.ch_names} != {configured_channels}"
         )
 
+    label_audit = restore_manifest_event_codes(epochs)
+    print(f"[LABELS] {label_audit}", flush=True)
+
     freqs = np.linspace(settings.tfr_fmin, settings.tfr_fmax, settings.tfr_n_freqs)
     tfr = mne.time_frequency.tfr_morlet(
         epochs,
@@ -123,6 +182,7 @@ def prepare_patient(args: argparse.Namespace, patient: str) -> Path:
         "n_epochs": len(tfr),
         "sessions": sessions,
         "shape": list(tfr.data.shape),
+        "labels": label_audit,
         "output": str(output_path),
         "settings": asdict(settings),
     }

@@ -52,14 +52,24 @@ done
 mkdir -p "${TFR_ROOT}" "${WORK_ROOT}" "${OUTPUT_ROOT}"
 cd "${PROJECT_ROOT}"
 
-"${PYTHON_BIN}" scripts/prepare_all_channel_tfr.py \
-  --patients "${patient}" \
-  --config-path "${CONFIG_PATH}" \
-  --study-def-path "${STUDY_DEF_PATH}" \
-  --data-root "${DATA_ROOT}" \
-  --output-root "${TFR_ROOT}" \
-  --work-root "${WORK_ROOT}" \
+prepare_args=(
+  --patients "${patient}"
+  --config-path "${CONFIG_PATH}"
+  --study-def-path "${STUDY_DEF_PATH}"
+  --data-root "${DATA_ROOT}"
+  --output-root "${TFR_ROOT}"
+  --work-root "${WORK_ROOT}"
   --tfr-jobs 4
+)
+if [[ "${OVERWRITE_TFR:-0}" == "1" ]]; then
+  prepare_args+=(--overwrite)
+fi
+"${PYTHON_BIN}" scripts/prepare_all_channel_tfr.py "${prepare_args[@]}"
+
+run_mode=(--resume)
+if [[ "${OVERWRITE_TFR:-0}" == "1" || "${OVERWRITE_RESULTS:-0}" == "1" ]]; then
+  run_mode=(--overwrite)
+fi
 
 for preset in "${PRESETS[@]}"; do
   condition_output="${OUTPUT_ROOT}/${patient}/${preset}"
@@ -75,5 +85,5 @@ for preset in "${PRESETS[@]}"; do
     --device cuda \
     --seed 42 \
     --num-workers 0 \
-    --resume
+    "${run_mode[@]}"
 done

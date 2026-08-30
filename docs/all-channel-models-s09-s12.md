@@ -57,16 +57,20 @@ For each patient the runner:
    manifest;
 2. applies notch filtering at 50/100/150 Hz, a 0.1–120 Hz band-pass and CAR over
    the complete `ch_to_keep` set;
-3. calculates and saves one full `C×F×T` Morlet TFR per patient so that the same
+3. restores the original manifest gesture codes before saving the TFR: event
+   `9` is `open_hand`, while events `1–8` and `10` are
+   `all_other_gestures`; it verifies this mapping against the manifest
+   `class_label` and requires both classes to be present;
+4. calculates and saves one full `C×F×T` Morlet TFR per patient so that the same
    source tensor is used by all three models;
-4. applies the selected window and, only for the `0–1000 ms` window, the
+5. applies the selected window and, only for the `0–1000 ms` window, the
    `100:-400` time-bin slice while preserving the remaining time axis for the
    models;
-5. keeps the `0.1–59.4 Hz` frequency range;
-6. fits SVM, AlexNet and Transformer using the existing confirmatory pipeline,
+6. keeps the `0.1–59.4 Hz` frequency range;
+7. fits SVM, AlexNet and Transformer using the existing confirmatory pipeline,
    including train-fold-only robust normalization and identical stratified
    five-fold splits;
-7. writes fold metrics, out-of-fold predictions, model metadata and completion
+8. writes fold metrics, out-of-fold predictions, model metadata and completion
    markers. Existing TFR files and completed folds make the run resumable.
 
 ## Server launch
@@ -82,3 +86,21 @@ written under
 `PreprocessedData/all_channel_model_benchmark/<patient>/<condition>/`. Separate
 patient roots prevent the two SLURM array tasks from overwriting shared progress
 and summary files.
+
+To replace a TFR produced by an older version of this launcher and recompute
+already completed folds in an existing allocation, run one patient at a time:
+
+```bash
+OVERWRITE_TFR=1 OVERWRITE_RESULTS=1 SLURM_ARRAY_TASK_ID=0 \
+  bash scripts/slurm_all_channel_models_s09_s12.sh \
+  2>&1 | tee all_channel_s09_fixed.log
+
+OVERWRITE_TFR=1 OVERWRITE_RESULTS=1 SLURM_ARRAY_TASK_ID=1 \
+  bash scripts/slurm_all_channel_models_s09_s12.sh \
+  2>&1 | tee all_channel_s12_fixed.log
+```
+
+Task `0` is `s09`; task `1` is `s12`. Without the overwrite variables, an
+existing TFR and completed folds are reused. The loader now stops before any
+model is trained if mapping the configured positive event code does not produce
+both classes.

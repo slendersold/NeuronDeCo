@@ -314,6 +314,16 @@ def load_tfr_xy_metadata(
 
     events = np.asarray(tfr.events)
     y = np.where(events[:, 2] == event_pos_code, 1, 0).astype(np.int64)
+    labels, label_counts = np.unique(y, return_counts=True)
+    if set(labels.tolist()) != {0, 1}:
+        event_codes, event_counts = np.unique(events[:, 2], return_counts=True)
+        raise ValueError(
+            "Expected both binary classes after mapping TFR events with "
+            f"event_pos_code={event_pos_code}; label_counts="
+            f"{dict(zip(labels.tolist(), label_counts.tolist()))}, event_counts="
+            f"{dict(zip(event_codes.tolist(), event_counts.tolist()))}, "
+            f"event_id={getattr(tfr, 'event_id', None)}"
+        )
 
     freqs = np.asarray(tfr.freqs, dtype=float) if hasattr(tfr, "freqs") else None
     times = np.asarray(tfr.times, dtype=float) if hasattr(tfr, "times") else None
@@ -407,6 +417,16 @@ def make_outer_folds(
     fold_subset: list[int] | None = None,
 ) -> list[tuple[np.ndarray, np.ndarray]]:
     """StratifiedKFold outer splits as (train_idx, test_idx) arrays."""
+    labels, counts = np.unique(y, return_counts=True)
+    if set(labels.tolist()) != {0, 1}:
+        raise ValueError(
+            f"Expected binary labels 0/1 for CV; got {dict(zip(labels.tolist(), counts.tolist()))}"
+        )
+    if int(counts.min()) < n_splits:
+        raise ValueError(
+            f"Each class needs at least n_splits={n_splits} samples; "
+            f"got {dict(zip(labels.tolist(), counts.tolist()))}"
+        )
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=seed)
     splits = list(skf.split(np.zeros(len(y)), y))
     if fold_subset is not None:

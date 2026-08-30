@@ -519,6 +519,8 @@ def main(argv: list[str] | None = None) -> int:
             root_fold_path = output_root / "fold_assignments.csv"
             if root_fold_path.is_file():
                 existing = pd.read_csv(root_fold_path)
+                if "patient" in existing.columns:
+                    existing = existing[existing["patient"].astype(str) != patient]
                 fold_table = pd.concat([existing, fold_table], ignore_index=True)
             fold_table.to_csv(root_fold_path, index=False)
 
