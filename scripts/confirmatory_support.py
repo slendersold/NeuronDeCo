@@ -329,7 +329,7 @@ def load_tfr_xy_metadata(
     times = np.asarray(tfr.times, dtype=float) if hasattr(tfr, "times") else None
 
     tfr = tfr.crop(tmin=preset.crop_tmin, tmax=preset.crop_tmax)
-    X_full = np.asarray(tfr.data, dtype=np.float32)
+    X_full = np.asarray(tfr.data)
     if X_full.ndim != 4:
         raise ValueError(f"Unexpected tfr.data shape: {X_full.shape}")
 
@@ -348,7 +348,7 @@ def load_tfr_xy_metadata(
     if times is not None:
         times = times[preset.trim_start_time_bins:trim_stop]
 
-    X_raw = _apply_freq_slice(X_full, preset, freqs).astype(np.float32)
+    X_raw = np.asarray(_apply_freq_slice(X_full, preset, freqs), dtype=np.float32)
     n_epochs = X_raw.shape[0]
 
     meta = pd.DataFrame(

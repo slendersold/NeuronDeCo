@@ -61,8 +61,10 @@ For each patient the runner:
    `9` is `open_hand`, while events `1–8` and `10` are
    `all_other_gestures`; it verifies this mapping against the manifest
    `class_label` and requires both classes to be present;
-4. calculates and saves one full `C×F×T` Morlet TFR per patient so that the same
-   source tensor is used by all three models;
+4. calculates Morlet power in small epoch batches and writes it through a
+   `float32` memory map; only the frequency bins used by the experiment and the
+   post-Morlet `0–2 s` interval are stored, while convolution is still computed
+   on the full epoch to preserve the established values;
 5. applies the selected window and, only for the `0–1000 ms` window, the
    `100:-400` time-bin slice while preserving the remaining time axis for the
    models;
@@ -74,6 +76,25 @@ For each patient the runner:
    markers. Existing TFR files and completed folds make the run resumable.
 
 ## Server launch
+
+For an existing single-GPU allocation with 40 GB RAM, the recommended launcher
+runs patients, preprocessing, conditions and models sequentially:
+
+```bash
+cd /beegfs/home/t.samsonov/notebooks/Pirogov/NeuronDeCo
+bash scripts/run_all_channel_models_sequential.sh \
+  2>&1 | tee all_channel_models_sequential.log
+```
+
+It uses two TFR workers, 16 epochs per TFR batch, one model worker and no data
+loader workers. A TFR is reused only when both the data file and its completion
+audit exist. Each condition is accepted only after all 15 completion markers
+exist. The script is safe to restart: verified TFRs and completed folds are
+reused. A failed TFR attempt is retried with one worker and a smaller batch; a
+failed condition is retried in resume mode. To restrict a recovery run to s12,
+set `PATIENTS_TO_RUN=s12`.
+
+The SLURM-array alternative is:
 
 ```bash
 cd /beegfs/home/t.samsonov/notebooks/Pirogov/NeuronDeCo

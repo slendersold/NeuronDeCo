@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -22,6 +23,9 @@ from stage3_fixed_svm_ablation import (
 
 
 POSITIVE_EVENT_CODE = 9
+STORED_TMIN = 0.0
+STORED_TMAX = 2.0
+STORED_FMAX = 59.4
 
 
 def restore_manifest_event_codes(epochs: mne.Epochs) -> dict[str, object]:
@@ -104,7 +108,7 @@ def make_settings(args: argparse.Namespace, patient: str) -> Settings:
         tfr_fmax=120.0,
         tfr_n_freqs=100,
         tfr_decim=2,
-        tfr_batch_size=24,
+        tfr_batch_size=max(int(args.tfr_batch_size), 1),
         tfr_n_jobs=max(int(args.tfr_jobs), 1),
         log_power_eps=1e-20,
         baseline_time_id="T2_0ms_1000ms",
@@ -120,9 +124,21 @@ def prepare_patient(args: argparse.Namespace, patient: str) -> Path:
     settings = make_settings(args, patient)
     output_root = ensure_dir(args.output_root.expanduser().resolve())
     output_path = output_root / f"tfr_{patient}.fif"
-    if output_path.exists() and not args.overwrite:
-        print(f"[SKIP] {output_path} already exists", flush=True)
-        return output_path
+    patient_work = ensure_dir(settings.output_storage / patient)
+    audit_path = patient_work / "tfr_preparation.json"
+    if output_path.exists() and audit_path.is_file() and not args.overwrite:
+        with open(audit_path, encoding="utf-8") as fh:
+            previous_audit = json.load(fh)
+        if previous_audit.get("output") == str(output_path):
+            print(f"[SKIP] verified TFR already exists: {output_path}", flush=True)
+            return output_path
+    if output_path.exists() and not audit_path.is_file() and not args.overwrite:
+        print(
+            f"[REBUILD] {output_path} has no completion audit and may be partial",
+            flush=True,
+        )
+    if args.overwrite and audit_path.exists():
+        audit_path.unlink()
 
     cfg = load_external_config(settings.config_path)
     configured_channels = list(cfg.ch_to_keep[patient])
@@ -145,7 +161,6 @@ def prepare_patient(args: argparse.Namespace, patient: str) -> Path:
     if rows.empty:
         raise RuntimeError(f"No accepted task epochs for {patient}")
 
-    patient_work = ensure_dir(settings.output_storage / patient)
     epochs, sessions, _ = load_patient_epochs(
         rows,
         configured_channels,
@@ -163,34 +178,103 @@ def prepare_patient(args: argparse.Namespace, patient: str) -> Path:
     label_audit = restore_manifest_event_codes(epochs)
     print(f"[LABELS] {label_audit}", flush=True)
 
-    freqs = np.linspace(settings.tfr_fmin, settings.tfr_fmax, settings.tfr_n_freqs)
-    tfr = mne.time_frequency.tfr_morlet(
-        epochs,
-        freqs=freqs,
-        n_cycles=freqs / 2.0,
-        return_itc=False,
-        decim=settings.tfr_decim,
-        average=False,
-        n_jobs=settings.tfr_n_jobs,
+    all_freqs = np.linspace(
+        settings.tfr_fmin,
+        settings.tfr_fmax,
+        settings.tfr_n_freqs,
     )
-    tfr.save(output_path, overwrite=True)
+    freqs = all_freqs[all_freqs <= STORED_FMAX]
+    decimated_times = epochs.times[:: settings.tfr_decim]
+    time_mask = (
+        (decimated_times >= STORED_TMIN - 1e-12)
+        & (decimated_times <= STORED_TMAX + 1e-12)
+    )
+    times = decimated_times[time_mask]
+    if not len(freqs) or not len(times):
+        raise RuntimeError("The stored TFR frequency/time selection is empty")
+
+    final_shape = (len(epochs), len(epochs.ch_names), len(freqs), len(times))
+    memmap_path = patient_work / f"tfr_{patient}_power.float32.npy"
+    partial_output = output_path.with_name(f"{output_path.stem}.partial{output_path.suffix}")
+    power_store = np.lib.format.open_memmap(
+        memmap_path,
+        mode="w+",
+        dtype=np.float32,
+        shape=final_shape,
+    )
+    print(
+        f"[TFR] batched float32 shape={final_shape} "
+        f"batch_size={settings.tfr_batch_size} n_jobs={settings.tfr_n_jobs}",
+        flush=True,
+    )
+
+    try:
+        for start in range(0, len(epochs), settings.tfr_batch_size):
+            stop = min(start + settings.tfr_batch_size, len(epochs))
+            batch_data = epochs[start:stop].get_data()
+            batch_power = mne.time_frequency.tfr_array_morlet(
+                batch_data,
+                sfreq=float(epochs.info["sfreq"]),
+                freqs=freqs,
+                n_cycles=freqs / 2.0,
+                zero_mean=False,
+                use_fft=True,
+                decim=settings.tfr_decim,
+                output="power",
+                n_jobs=settings.tfr_n_jobs,
+                verbose=False,
+            )
+            power_store[start:stop] = batch_power[..., time_mask].astype(
+                np.float32,
+                copy=False,
+            )
+            power_store.flush()
+            del batch_data, batch_power
+            gc.collect()
+            print(f"[TFR] epochs {start}:{stop}/{len(epochs)}", flush=True)
+
+        tfr = mne.time_frequency.EpochsTFR(
+            epochs.info.copy(),
+            power_store,
+            times,
+            freqs,
+            comment="all-channel model benchmark",
+            method="morlet",
+            events=epochs.events.copy(),
+            event_id=dict(epochs.event_id),
+            metadata=epochs.metadata.reset_index(drop=True).copy(),
+            verbose=False,
+        )
+        if partial_output.exists():
+            partial_output.unlink()
+        tfr.save(partial_output, overwrite=True)
+        partial_output.replace(output_path)
+        del tfr
+    finally:
+        del power_store
+        gc.collect()
+        if memmap_path.exists():
+            memmap_path.unlink()
 
     audit = {
         "patient": patient,
-        "channels": list(tfr.ch_names),
-        "n_channels": len(tfr.ch_names),
-        "n_epochs": len(tfr),
+        "channels": list(epochs.ch_names),
+        "n_channels": len(epochs.ch_names),
+        "n_epochs": len(epochs),
         "sessions": sessions,
-        "shape": list(tfr.data.shape),
+        "shape": list(final_shape),
+        "dtype": "float32",
+        "stored_frequency_hz": [float(freqs[0]), float(freqs[-1])],
+        "stored_time_s": [float(times[0]), float(times[-1])],
         "labels": label_audit,
         "output": str(output_path),
         "settings": asdict(settings),
     }
-    (patient_work / "tfr_preparation.json").write_text(
+    audit_path.write_text(
         json.dumps(audit, ensure_ascii=False, indent=2, default=str),
         encoding="utf-8",
     )
-    print(f"[SAVED] {output_path} shape={tfr.data.shape}", flush=True)
+    print(f"[SAVED] {output_path} shape={final_shape} dtype=float32", flush=True)
     return output_path
 
 
@@ -205,6 +289,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--work-root", type=Path, required=True)
     parser.add_argument("--tfr-jobs", type=int, default=2)
+    parser.add_argument("--tfr-batch-size", type=int, default=16)
     parser.add_argument("--overwrite", action="store_true")
     return parser
 

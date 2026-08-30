@@ -26,6 +26,7 @@ Example (pilot run)::
 from __future__ import annotations
 
 import argparse
+import gc
 import json
 import logging
 import sys
@@ -440,6 +441,10 @@ def run_fold_job(
         fold,
         metrics["macro_f1"],
     )
+    del X_train_raw, X_test_raw, X_train, X_test
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
 
 
 def aggregate_all(output_root: Path) -> None:

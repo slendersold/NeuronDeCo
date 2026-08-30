@@ -21,6 +21,8 @@ OPTUNA_CONFIG="${OPTUNA_CONFIG:-${PROJECT_ROOT}/configs/optuna_sources.yaml}"
 TFR_ROOT="${TFR_ROOT:-${PREPROCESSED_ROOT}/all_channels_tfr}"
 WORK_ROOT="${WORK_ROOT:-${PREPROCESSED_ROOT}/all_channel_model_benchmark_work}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-${PREPROCESSED_ROOT}/all_channel_model_benchmark}"
+TFR_JOBS="${TFR_JOBS:-2}"
+TFR_BATCH_SIZE="${TFR_BATCH_SIZE:-16}"
 
 PATIENTS=(s09 s12)
 PRESETS=(
@@ -59,7 +61,8 @@ prepare_args=(
   --data-root "${DATA_ROOT}"
   --output-root "${TFR_ROOT}"
   --work-root "${WORK_ROOT}"
-  --tfr-jobs 4
+  --tfr-jobs "${TFR_JOBS}"
+  --tfr-batch-size "${TFR_BATCH_SIZE}"
 )
 if [[ "${OVERWRITE_TFR:-0}" == "1" ]]; then
   prepare_args+=(--overwrite)
